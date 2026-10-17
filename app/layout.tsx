@@ -1,6 +1,10 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import DomPatch from "@/components/DomPatch";
+import { getMarca } from "@/lib/marca/server";
+import { MarcaProvider } from "@/lib/marca";
+
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Control de Ingreso — Escuela Naval",
@@ -26,11 +30,13 @@ export const viewport: Viewport = {
   themeColor: "#0A2540",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const marca = await getMarca();
+
   return (
     <html lang="es" className="notranslate" translate="no" suppressHydrationWarning>
       <head>
@@ -38,7 +44,9 @@ export default function RootLayout({
       </head>
       <body className="notranslate" suppressHydrationWarning>
         <DomPatch />
-        {children}
+        <MarcaProvider initialMarca={marca}>
+          {children}
+        </MarcaProvider>
       </body>
     </html>
   );
