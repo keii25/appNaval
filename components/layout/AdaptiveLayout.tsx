@@ -78,7 +78,7 @@ export function AdaptiveLayout({
     customNavItems ||
     (userRole === "admin"
       ? [
-          { label: "Deportistas", href: "/admin", icon: <Users className="w-5 h-5" /> },
+          { label: "Admin", href: "/admin", icon: <Users className="w-5 h-5" /> },
           { label: "Importar CSV", href: "/admin/importar", icon: <FileSpreadsheet className="w-5 h-5" /> },
           { label: "Control Portería", href: "/porteria", icon: <ShieldCheck className="w-5 h-5" /> },
         ]
