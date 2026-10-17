@@ -53,6 +53,9 @@ function LoginForm() {
           setMinutosBloqueo(data.minutosRestantes || 15);
         } else if (data.intentosRestantes !== undefined) {
           setIntentosRestantes(data.intentosRestantes);
+        } else {
+          setIntentosRestantes(null);
+          setBloqueado(false);
         }
         setCargando(false);
         return;
