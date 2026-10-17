@@ -11,9 +11,11 @@ import Modal from "@/components/ui/Modal";
 import TabEscuelas from "./components/TabEscuelas";
 import TabAuxiliares from "./components/TabAuxiliares";
 import TabConfiguracion from "./components/TabConfiguracion";
+import TabMarca from "./components/TabMarca";
 import TabAuditoria from "./components/TabAuditoria";
 import TabVisitantes from "./components/TabVisitantes";
 import DeportistasManager from "@/components/deportistas/DeportistasManager";
+import { useLabels } from "@/lib/marca";
 import {
   Users,
   UserPlus,
@@ -27,19 +29,21 @@ import {
   Menu,
   Check,
   ChevronDown,
+  Palette,
 } from "lucide-react";
 
-type TabAdmin = "deportistas" | "visitantes" | "escuelas" | "auxiliares" | "configuracion" | "auditoria";
+type TabAdmin = "deportistas" | "visitantes" | "escuelas" | "auxiliares" | "configuracion" | "marca" | "auditoria";
 
 function AdminContent() {
+  const { t } = useLabels();
   const [tabActual, setTabActual] = useState<TabAdmin>("deportistas");
   const [menuHamburguesaAbierto, setMenuHamburguesaAbierto] = useState(false);
 
   const tabOptions = [
     {
       value: "deportistas" as TabAdmin,
-      label: "Deportistas",
-      descripcion: "Padrón oficial de atletas y acompañantes",
+      label: t("Participantes"),
+      descripcion: `Padrón oficial de ${t("participantes")} y acompañantes`,
       icon: <Users className="w-4 h-4 text-blue-600 dark:text-blue-400" />,
       bgIcon: "bg-blue-50 dark:bg-blue-950/50",
     },
@@ -52,8 +56,8 @@ function AdminContent() {
     },
     {
       value: "escuelas" as TabAdmin,
-      label: "Escuelas",
-      descripcion: "Catálogo de academias militares oficiales",
+      label: t("Entidades"),
+      descripcion: `Catálogo oficial de ${t("entidades")}`,
       icon: <School className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />,
       bgIcon: "bg-indigo-50 dark:bg-indigo-950/50",
     },
@@ -70,6 +74,13 @@ function AdminContent() {
       descripcion: "Cupos máximos y plazos de registro",
       icon: <Settings className="w-4 h-4 text-amber-600 dark:text-amber-400" />,
       bgIcon: "bg-amber-50 dark:bg-amber-950/50",
+    },
+    {
+      value: "marca" as TabAdmin,
+      label: "Marca y Textos",
+      descripcion: "Logos, colores, vocabulario y textos dinámicos",
+      icon: <Palette className="w-4 h-4 text-sky-600 dark:text-sky-400" />,
+      bgIcon: "bg-sky-50 dark:bg-sky-950/50",
     },
     {
       value: "auditoria" as TabAdmin,
@@ -239,6 +250,7 @@ function AdminContent() {
         {tabActual === "escuelas" && <TabEscuelas />}
         {tabActual === "auxiliares" && <TabAuxiliares />}
         {tabActual === "configuracion" && <TabConfiguracion />}
+        {tabActual === "marca" && <TabMarca />}
         {tabActual === "auditoria" && <TabAuditoria />}
       </div>
     </div>
