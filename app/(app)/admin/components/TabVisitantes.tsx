@@ -166,7 +166,7 @@ export function TabVisitantes() {
     } finally {
       setCargando(false);
     }
-  }, [busqueda, filtroEstado, filtroEscuela, filtroVehiculo, toast]);
+  }, [busqueda, filtroEstado, filtroEscuela, filtroVehiculo, toast, t]);
 
   useEffect(() => {
     cargarVisitantes();

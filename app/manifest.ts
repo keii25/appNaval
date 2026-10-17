@@ -2,6 +2,8 @@
 import { MetadataRoute } from "next";
 import { getMarca } from "@/lib/marca/server";
 
+export const dynamic = "force-dynamic";
+
 export default async function manifest(): Promise<MetadataRoute.Manifest> {
   const marca = await getMarca();
 
