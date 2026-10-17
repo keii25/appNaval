@@ -34,7 +34,7 @@ export default function AuxiliarDeportistaVisitantesPage({ params }: PageProps) 
       <AdaptiveLayout
         userName={perfil?.nombre || "Auxiliar de Acreditación"}
         userSubtitle={perfil?.unidad || "Mesa de Registro"}
-        userRole="auxiliar"
+        userRole={perfil?.rol || "auxiliar"}
       >
         <VisitantesManager
           deportistaId={params.id}

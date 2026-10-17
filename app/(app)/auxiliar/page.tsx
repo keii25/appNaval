@@ -44,7 +44,7 @@ export default function AuxiliarPage() {
       <AdaptiveLayout
         userName={perfil?.nombre || "Auxiliar de Acreditación"}
         userSubtitle={perfil?.unidad || "Mesa de Registro"}
-        userRole="auxiliar"
+        userRole={perfil?.rol || "auxiliar"}
       >
         <AuxiliarDashboard />
       </AdaptiveLayout>

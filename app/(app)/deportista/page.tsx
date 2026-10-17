@@ -730,7 +730,7 @@ export default function DeportistaPage() {
       <AdaptiveLayout
         userName={perfil?.nombre || "Deportista"}
         userSubtitle={perfil?.unidad || "Escuela Naval"}
-        userRole="auxiliar"
+        userRole={perfil?.rol || "auxiliar"}
       >
         <DeportistaDashboard />
       </AdaptiveLayout>

@@ -2,6 +2,7 @@
 
 // app/(app)/porteria/page.tsx — Control de Ingreso y Consulta de Portería Naval (Apple HIG)
 import React, { useState, useEffect, useCallback, useMemo } from "react";
+import Link from "next/link";
 import AdaptiveLayout from "@/components/layout/AdaptiveLayout";
 import LargeTitleHeader from "@/components/layout/LargeTitleHeader";
 import ToastProvider, { useToast } from "@/components/ui/Toast";
@@ -10,6 +11,7 @@ import Modal from "@/components/ui/Modal";
 import type { Perfil } from "@/types/database";
 import {
   ShieldCheck,
+  ArrowLeft,
   Search,
   CheckCircle2,
   XCircle,
@@ -73,7 +75,7 @@ export interface PorteriaRegistro {
 
 type FiltroTipo = "todos" | "deportistas" | "visitantes" | "vehiculos";
 
-function PorteriaDashboard() {
+function PorteriaDashboard({ perfil }: { perfil?: Perfil | null }) {
   const toast = useToast();
 
   const [busqueda, setBusqueda] = useState("");
@@ -176,12 +178,33 @@ function PorteriaDashboard() {
     <div className="space-y-6 max-w-5xl mx-auto pb-24">
       {/* ─── ENCABEZADO DE PORTERÍA (ALTO CONTRASTE) ─── */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <LargeTitleHeader
-          title="Control de Portería"
-          subtitle="Verificación instantánea de ingreso de familiares y vehículos a la Escuela Naval."
-        />
+        <div className="flex items-center gap-3">
+          {perfil?.rol === "admin" && (
+            <Link
+              href="/admin"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 text-neutral-700 dark:text-neutral-200 hover:bg-neutral-50 dark:hover:bg-neutral-700/80 text-xs font-bold transition-all shadow-sm shrink-0 active:scale-95"
+              title="Volver al Panel de Administración"
+            >
+              <ArrowLeft className="w-4 h-4 text-neutral-500 dark:text-neutral-400" />
+              <span>Volver a Admin</span>
+            </Link>
+          )}
+          <LargeTitleHeader
+            title="Control de Portería"
+            subtitle="Verificación instantánea de ingreso de familiares y vehículos a la Escuela Naval."
+          />
+        </div>
 
         <div className="flex items-center gap-2 self-start sm:self-auto">
+          {perfil?.rol === "admin" && (
+            <Link
+              href="/admin"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-900/60 text-xs font-bold transition-colors"
+            >
+              <ArrowLeft className="w-3.5 h-3.5" />
+              <span>Home Admin</span>
+            </Link>
+          )}
           <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-blue-50 dark:bg-blue-950/40 text-[#0A2540] dark:text-blue-300 text-xs font-semibold">
             <ShieldCheck className="w-4 h-4 text-blue-600 dark:text-blue-400" />
             <span>Puesto de Guardia Oficial</span>
@@ -961,11 +984,11 @@ export default function PorteriaPage() {
   return (
     <ToastProvider>
       <AdaptiveLayout
-        userRole="porteria"
-        userName={perfil?.nombre || "Guardia de Portería"}
-        userSubtitle={perfil?.unidad || "Puesto de Control Naval"}
+        userRole={perfil?.rol || "porteria"}
+        userName={perfil?.nombre || (perfil?.rol === "admin" ? "Administrador General" : "Guardia de Portería")}
+        userSubtitle={perfil?.unidad || (perfil?.rol === "admin" ? "Control Maestro Interescuelas" : "Puesto de Control Naval")}
       >
-        <PorteriaDashboard />
+        <PorteriaDashboard perfil={perfil} />
       </AdaptiveLayout>
     </ToastProvider>
   );
