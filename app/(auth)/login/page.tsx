@@ -191,7 +191,7 @@ function LoginForm() {
                   htmlFor="cedula"
                   className="block text-xs font-bold uppercase tracking-wider text-neutral-500 dark:text-neutral-400 mb-1.5 ml-1"
                 >
-                  {textosLogin.label_usuario || "Cédula de Identidad"}
+                  {textosLogin.label_usuario || "Usuario"}
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-neutral-400">
@@ -201,13 +201,12 @@ function LoginForm() {
                     id="cedula"
                     name="cedula"
                     type="text"
-                    inputMode="numeric"
                     autoComplete="username"
                     required
                     disabled={cargando || bloqueado}
                     value={cedula}
-                    onChange={(e) => setCedula(e.target.value.replace(/[^0-9]/g, ""))}
-                    placeholder={textosLogin.placeholder_usuario || "Ej. 1098765432"}
+                    onChange={(e) => setCedula(e.target.value)}
+                    placeholder={textosLogin.placeholder_usuario || "Ej. 1098765432 o usuario"}
                     className="w-full pl-10 pr-4 py-3 rounded-2xl bg-neutral-100 dark:bg-neutral-800/70 border border-transparent focus:border-[#0A2540] dark:focus:border-blue-400 focus:bg-white dark:focus:bg-neutral-900 text-neutral-900 dark:text-white placeholder-neutral-400 dark:placeholder-neutral-500 text-sm font-semibold outline-none transition-all duration-150 disabled:opacity-50"
                   />
                 </div>

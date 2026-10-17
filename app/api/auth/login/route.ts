@@ -69,7 +69,7 @@ export async function POST(request: NextRequest) {
 
       return NextResponse.json(
         {
-          error: `Cédula o contraseña incorrecta. Intentos restantes: ${limitActualizado.intentosRestantes}.`,
+          error: `Usuario o contraseña incorrecta. Intentos restantes: ${limitActualizado.intentosRestantes}.`,
           intentosRestantes: limitActualizado.intentosRestantes,
         },
         { status: 401 }

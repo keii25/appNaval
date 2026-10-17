@@ -22,10 +22,10 @@ export const DEFAULT_MARCA: ConfiguracionMarca = {
     ubicacion_pie: "Cartagena 2026",
     titulo_formulario: "Control de Ingreso",
     subtitulo_formulario: "Plataforma Oficial de Acreditación y Seguridad",
-    label_usuario: "Cédula de Identidad",
-    placeholder_usuario: "Ej. 1098765432",
+    label_usuario: "Usuario",
+    placeholder_usuario: "Ej. 1098765432 o usuario",
     label_password: "Contraseña",
-    ayuda_password: "Tu número de cédula",
+    ayuda_password: "Tu contraseña asignada",
     placeholder_password: "••••••••",
     boton_login: "Iniciar Sesión",
     aviso_legal_corto:

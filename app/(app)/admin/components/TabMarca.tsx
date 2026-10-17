@@ -980,7 +980,7 @@ export function TabMarca() {
                   }`}
                 >
                   <div className="h-8 rounded-xl bg-neutral-100 dark:bg-neutral-800 flex items-center px-3 text-[11px] opacity-60">
-                    Número de Documento
+                    {marca.textos_login?.label_usuario || "Usuario"}
                   </div>
                   <div className="h-8 rounded-xl bg-neutral-100 dark:bg-neutral-800 flex items-center px-3 text-[11px] opacity-60">
                     ••••••••
