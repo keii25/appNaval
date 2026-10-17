@@ -7,10 +7,7 @@ export const metadata: Metadata = {
     "Sistema de control de ingreso de visitantes para la Escuela Naval de Cadetes Almirante Padilla",
   manifest: "/manifest.json",
   icons: {
-    icon: [
-      { url: "/images/logo-interescuelas-2026.png" },
-      { url: "/icon.png" }
-    ],
+    icon: "/images/logo-interescuelas-2026.png",
     shortcut: "/images/logo-interescuelas-2026.png",
     apple: "/images/logo-interescuelas-2026.png",
   },
