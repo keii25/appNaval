@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
+import DomPatch from "@/components/DomPatch";
 
 export const metadata: Metadata = {
   title: "Control de Ingreso — Escuela Naval",
@@ -31,8 +32,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="es">
-      <body>{children}</body>
+    <html lang="es" className="notranslate" translate="no" suppressHydrationWarning>
+      <head>
+        <meta name="google" content="notranslate" />
+      </head>
+      <body className="notranslate" suppressHydrationWarning>
+        <DomPatch />
+        {children}
+      </body>
     </html>
   );
 }
