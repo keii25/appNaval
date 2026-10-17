@@ -8,6 +8,7 @@ import Switch from "@/components/ui/Switch";
 import Modal from "@/components/ui/Modal";
 import { useToast } from "@/components/ui/Toast";
 import type { Rol } from "@/types/database";
+import { useLabels } from "@/lib/marca";
 import {
   Users,
   Search,
@@ -56,6 +57,7 @@ export function DeportistasManager({
   baseRutaVisitantes = "/auxiliar",
 }: DeportistasManagerProps) {
   const toast = useToast();
+  const { marca, t } = useLabels();
 
   const [deportistas, setDeportistas] = useState<DeportistaItem[]>([]);
   const [escuelas, setEscuelas] = useState<EscuelaOption[]>([]);
@@ -120,14 +122,14 @@ export function DeportistasManager({
       if (res.ok && data.ok) {
         setDeportistas(data.deportistas || []);
       } else {
-        toast.error("Error", data.error || "No se pudieron cargar los deportistas.");
+        toast.error("Error", data.error || `No se pudieron cargar ${t("los", "participante", true)}.`);
       }
     } catch {
-      toast.error("Error", "Error de conexión al obtener los deportistas.");
+      toast.error("Error", `Error de conexión al obtener ${t("los", "participante", true)}.`);
     } finally {
       setCargando(false);
     }
-  }, [busqueda, filtroEscuela, toast]);
+  }, [busqueda, filtroEscuela, toast, t]);
 
   useEffect(() => {
     cargarEscuelas();
@@ -173,7 +175,7 @@ export function DeportistasManager({
       const data = await res.json();
 
       if (res.ok && data.ok) {
-        toast.success("Deportista Registrado", data.mensaje);
+        toast.success(`${t("Participante")} Registrado`, data.mensaje);
         setModalCrearAbierto(false);
         setNuevoNombre("");
         setNuevaCedula("");
@@ -249,7 +251,7 @@ export function DeportistasManager({
       const data = await res.json();
 
       if (res.ok && data.ok) {
-        toast.success("Deportista Eliminado", data.mensaje);
+        toast.success(`${t("Participante")} Eliminado`, data.mensaje);
         setDeportistaEliminando(null);
         cargarDeportistas();
       } else {
@@ -279,7 +281,7 @@ export function DeportistasManager({
         <div className="p-4 rounded-3xl bg-white dark:bg-[#1C1C1E] border border-neutral-200/70 dark:border-neutral-800/80 shadow-sm flex items-center justify-between">
           <div>
             <span className="text-[11px] font-semibold uppercase tracking-wider text-neutral-400">
-              Deportistas Registrados
+              {t("Participantes")} Registrados
             </span>
             <p className="text-2xl font-black text-neutral-900 dark:text-white mt-1">
               {totalDeportistas}
@@ -293,7 +295,7 @@ export function DeportistasManager({
         <div className="p-4 rounded-3xl bg-white dark:bg-[#1C1C1E] border border-neutral-200/70 dark:border-neutral-800/80 shadow-sm flex items-center justify-between">
           <div>
             <span className="text-[11px] font-semibold uppercase tracking-wider text-neutral-400">
-              Escuelas Participantes
+              {t("Entidades")} Participantes
             </span>
             <p className="text-2xl font-black text-neutral-900 dark:text-white mt-1">
               {escuelas.length}
@@ -307,7 +309,7 @@ export function DeportistasManager({
         <div className="p-4 rounded-3xl bg-white dark:bg-[#1C1C1E] border border-neutral-200/70 dark:border-neutral-800/80 shadow-sm flex items-center justify-between">
           <div>
             <span className="text-[11px] font-semibold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
-              Visitantes Vinculados
+              {t("Visitantes")} Vinculados
             </span>
             <p className="text-2xl font-black text-emerald-600 dark:text-emerald-400 mt-1">
               {totalVisitantes}
@@ -338,7 +340,7 @@ export function DeportistasManager({
             onChange={(e) => setFiltroEscuela(e.target.value)}
             className="w-full sm:w-auto min-h-[44px] px-3 py-2 rounded-2xl bg-white dark:bg-[#1C1C1E] border border-neutral-200/70 dark:border-neutral-800/80 text-xs sm:text-sm font-semibold text-neutral-700 dark:text-neutral-200 focus:outline-none focus:ring-2 focus:ring-[#0A2540] shadow-sm"
           >
-            <option value="">Todas las escuelas</option>
+            <option value="">{t("todos", "entidad")}</option>
             {escuelas.map((esc) => (
               <option key={esc.id} value={esc.id}>
                 {esc.nombre}
@@ -362,7 +364,7 @@ export function DeportistasManager({
               className="flex-1 sm:flex-initial min-h-[44px] px-4 py-2.5 rounded-2xl bg-[#0A2540] hover:bg-[#071a2e] text-white text-xs sm:text-sm font-bold flex items-center justify-center gap-2 shadow-sm transition-all active:scale-[0.98]"
             >
               <Plus className="w-4 h-4" />
-              <span>Nuevo Deportista</span>
+              <span>{t("nuevo", "participante")}</span>
             </button>
           </div>
         </div>
@@ -373,15 +375,15 @@ export function DeportistasManager({
         <div className="p-4 sm:p-5 border-b border-neutral-100 dark:border-neutral-800 flex items-center justify-between">
           <div>
             <h3 className="text-base font-bold text-neutral-900 dark:text-white">
-              Padrón de Atletas y Cadetes
+              Padrón Oficial de {t("Participantes")}
             </h3>
             <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-0.5">
-              Registro oficial de deportistas para la acreditación de acompañantes e ingreso a instalaciones.
+              Registro oficial de {t("participantes")} para la acreditación de {t("visitantes")} e ingreso a instalaciones.
             </p>
           </div>
           <div className="flex items-center gap-2">
             <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300">
-              {deportistas.length} {deportistas.length === 1 ? "deportista" : "deportistas"}
+              {deportistas.length} {deportistas.length === 1 ? t("participante") : t("participantes")}
             </span>
             {totalPaginas > 1 && (
               <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-blue-50 dark:bg-blue-950/60 text-[#0A2540] dark:text-blue-300">
@@ -400,12 +402,12 @@ export function DeportistasManager({
           <div className="p-10 text-center">
             <Users className="w-10 h-10 text-neutral-300 dark:text-neutral-600 mx-auto mb-2" />
             <p className="text-sm font-semibold text-neutral-700 dark:text-neutral-300">
-              No se encontraron deportistas
+              No se encontraron {t("participantes")}
             </p>
             <p className="text-xs text-neutral-400 mt-1 max-w-sm mx-auto">
               {busqueda || filtroEscuela
-                ? "Ningún deportista coincide con los filtros aplicados."
-                : "Utilice el botón 'Nuevo Deportista' para registrar el primer atleta o importe el archivo CSV."}
+                ? `Ningún ${t("participante")} coincide con los filtros aplicados.`
+                : `Utilice el botón '${t("nuevo", "participante")}' para registrar ${t("al", "participante")} o importe el archivo CSV.`}
             </p>
           </div>
         ) : (
@@ -467,7 +469,7 @@ export function DeportistasManager({
                     >
                       <UserPlus className="w-3.5 h-3.5 shrink-0" />
                       <span>
-                        Visitantes ({d.visitantes_count})
+                        {t("Visitantes")} ({d.visitantes_count})
                       </span>
                     </Link>
 
@@ -487,8 +489,8 @@ export function DeportistasManager({
                       onClick={() => setDeportistaEliminando(d)}
                       title={
                         tieneVisitantes
-                          ? "No se puede eliminar: tiene visitantes asociados."
-                          : "Eliminar deportista"
+                          ? `No se puede eliminar: tiene ${t("visitantes")} asociados.`
+                          : `Eliminar ${t("participante")}`
                       }
                       className={`min-h-[40px] px-3 py-1.5 rounded-xl text-xs font-semibold inline-flex items-center justify-center gap-1.5 transition-all active:scale-95 ${
                         tieneVisitantes
@@ -512,7 +514,7 @@ export function DeportistasManager({
             <div className="text-xs text-neutral-500 dark:text-neutral-400 text-center sm:text-left">
               Mostrando <strong className="text-neutral-900 dark:text-white font-bold">{inicioIndice + 1}</strong> a{" "}
               <strong className="text-neutral-900 dark:text-white font-bold">{Math.min(finIndice, deportistas.length)}</strong> de{" "}
-              <strong className="text-neutral-900 dark:text-white font-bold">{deportistas.length}</strong> deportistas
+              <strong className="text-neutral-900 dark:text-white font-bold">{deportistas.length}</strong> {t("participantes")}
             </div>
 
             {totalPaginas > 1 && (
@@ -592,8 +594,8 @@ export function DeportistasManager({
       <Modal
         isOpen={modalCrearAbierto}
         onClose={() => setModalCrearAbierto(false)}
-        title="Registrar Nuevo Deportista"
-        description="Ficha oficial de atleta o cadete participante en los Inter Escuelas."
+        title={`Registrar ${t("nuevo", "participante")}`}
+        description={`Ficha oficial de ${t("participante")} en ${marca.nombre_actividad}.`}
         maxWidth="lg"
       >
         <form onSubmit={handleCrear} className="space-y-4">
@@ -626,7 +628,7 @@ export function DeportistasManager({
 
           <div>
             <label className="block text-xs font-bold uppercase tracking-wider text-neutral-500 mb-1.5">
-              Escuela Militar o Policial *
+              {t("Entidad")} *
             </label>
             <select
               value={nuevaEscuelaId}
@@ -634,7 +636,7 @@ export function DeportistasManager({
               required
               className="w-full min-h-[44px] px-3.5 py-2 rounded-2xl bg-neutral-100 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 text-sm text-neutral-900 dark:text-white font-semibold focus:outline-none focus:ring-2 focus:ring-[#0A2540]"
             >
-              <option value="" disabled>Seleccione una escuela...</option>
+              <option value="" disabled>Seleccione una {t("entidad")}...</option>
               {escuelas.map((esc) => (
                 <option key={esc.id} value={esc.id}>
                   {esc.nombre}
@@ -675,12 +677,12 @@ export function DeportistasManager({
                 <strong className="block text-[#0A2540] dark:text-blue-300 font-bold mb-0.5">
                   Autorización Obligatoria — Tratamiento de Datos (Ley 1581 de 2012) *
                 </strong>
-                Certifico que el deportista ha suministrado y autorizado el tratamiento de sus datos personales conforme a la Ley 1581 de 2012 para fines de acreditación, seguridad militar y acceso al recinto de la Escuela Naval.
+                Certifico que {t("el", "participante")} ha suministrado y autorizado el tratamiento de sus datos personales conforme a la Ley 1581 de 2012 para fines de acreditación, seguridad militar y acceso al recinto de {marca.organizacion}.
               </label>
             </div>
             {!aceptoLey1581 && (
               <p className="text-[11px] text-amber-600 dark:text-amber-400 font-semibold pl-8">
-                * Debe marcar esta autorización para poder registrar al deportista.
+                * Debe marcar esta autorización para poder registrar {t("al", "participante")}.
               </p>
             )}
           </div>
@@ -698,7 +700,7 @@ export function DeportistasManager({
               disabled={guardandoCrear || !aceptoLey1581}
               className="min-h-[44px] px-6 py-2 rounded-2xl bg-[#0A2540] hover:bg-[#071a2e] text-white text-sm font-bold shadow-sm transition-all active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed"
             >
-              {guardandoCrear ? "Registrando..." : "Guardar Deportista"}
+              {guardandoCrear ? "Registrando..." : `Guardar ${t("Participante")}`}
             </button>
           </div>
         </form>
@@ -708,7 +710,7 @@ export function DeportistasManager({
       <Modal
         isOpen={!!deportistaEditando}
         onClose={() => setDeportistaEditando(null)}
-        title="Editar Ficha del Deportista"
+        title={`Editar Ficha ${t("del", "participante")}`}
         description={`Modifique los datos de ${deportistaEditando?.nombre_completo}.`}
         maxWidth="lg"
       >
@@ -739,7 +741,7 @@ export function DeportistasManager({
 
           <div>
             <label className="block text-xs font-bold uppercase tracking-wider text-neutral-500 mb-1.5">
-              Escuela Oficial
+              {t("Entidad")} Oficial
             </label>
             <select
               value={editEscuelaId}
@@ -794,7 +796,7 @@ export function DeportistasManager({
         title={
           (deportistaEliminando?.visitantes_count || 0) > 0
             ? "Acción Protegida"
-            : "¿Eliminar Deportista?"
+            : `¿Eliminar ${t("Participante")}?`
         }
       >
         <div className="space-y-4">
@@ -809,13 +811,13 @@ export function DeportistasManager({
                   No se puede eliminar a {deportistaEliminando?.nombre_completo}
                 </p>
                 <p className="text-xs text-neutral-500 dark:text-neutral-400 leading-relaxed">
-                  Este deportista tiene{" "}
+                  Este {t("participante")} tiene{" "}
                   <strong className="text-neutral-900 dark:text-white font-bold">
-                    {deportistaEliminando?.visitantes_count} visitante(s) registrado(s)
-                  </strong>. Por seguridad y trazabilidad, no se permite eliminar deportistas con acompañantes activos.
+                    {deportistaEliminando?.visitantes_count} {t("visitantes")} registrado(s)
+                  </strong>. Por seguridad y trazabilidad, no se permite eliminar {t("participantes")} con acompañantes activos.
                 </p>
                 <div className="p-3 rounded-2xl bg-amber-50 dark:bg-amber-950/30 text-xs text-amber-900 dark:text-amber-300 text-left mt-2">
-                  <strong>Instrucción:</strong> Ingrese a la gestión de visitantes de este deportista y elimínelos primero si desea borrar la ficha del atleta.
+                  <strong>Instrucción:</strong> Ingrese a la gestión de {t("visitantes")} de este {t("participante")} y elimínelos primero si desea borrar la ficha {t("del", "participante")}.
                 </div>
               </div>
 
@@ -840,7 +842,7 @@ export function DeportistasManager({
                   ¿Confirma eliminar a &quot;{deportistaEliminando?.nombre_completo}&quot;?
                 </p>
                 <p className="text-xs text-neutral-500 dark:text-neutral-400">
-                  El atleta no tiene visitantes asociados. Esta acción removerá su ficha definitivamente.
+                  El {t("participante")} no tiene {t("visitantes")} asociados. Esta acción removerá su ficha definitivamente.
                 </p>
               </div>
 

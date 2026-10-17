@@ -1,4 +1,4 @@
-// lib/export/word.ts — Generación de Minuta Oficial de Word para la Guardia Naval (docx v9)
+// lib/export/word.ts — Generación de Minuta Oficial de Word para Control de Ingreso (docx v9)
 import {
   Document,
   Packer,
@@ -16,14 +16,37 @@ import {
   PageNumber,
 } from "docx";
 import type { VisitanteExportItem } from "./excel";
+import type { ConfiguracionMarca } from "@/types/database";
 
 export async function generarWordMinutaNaval(
   visitantes: VisitanteExportItem[],
   opciones?: {
     tituloFiltro?: string;
     nombreEscuelaFiltro?: string;
+    marca?: ConfiguracionMarca;
   }
 ): Promise<Buffer> {
+  const isDynamic = Boolean(opciones?.marca?.flag_marca_dinamica);
+  const marca = opciones?.marca;
+
+  const parseColor = (hex?: string) => {
+    if (!hex) return "0A2540";
+    const clean = hex.replace("#", "").trim();
+    return clean.length === 6 ? clean : "0A2540";
+  };
+
+  const colorPrimario = isDynamic && marca?.color_acento ? parseColor(marca.color_acento) : "0A2540";
+
+  const labelEntidadSingular = isDynamic && marca?.vocabulario?.entidad?.titulo
+    ? marca.vocabulario.entidad.titulo
+    : "Escuela Militar";
+  const labelParticipanteSingular = isDynamic && marca?.vocabulario?.participante?.titulo
+    ? marca.vocabulario.participante.titulo
+    : "Deportista";
+  const labelVisitanteSingular = isDynamic && marca?.vocabulario?.visitante?.titulo
+    ? marca.vocabulario.visitante.titulo
+    : "Visitante";
+
   const fechaGeneracion = new Date().toLocaleString("es-CO", {
     timeZone: "America/Bogota",
     year: "numeric",
@@ -50,7 +73,7 @@ export async function generarWordMinutaNaval(
     children: [
       new TableCell({
         width: { size: 5, type: WidthType.PERCENTAGE },
-        shading: { fill: "0A2540" },
+        shading: { fill: colorPrimario },
         children: [
           new Paragraph({
             alignment: AlignmentType.CENTER,
@@ -60,7 +83,7 @@ export async function generarWordMinutaNaval(
       }),
       new TableCell({
         width: { size: 11, type: WidthType.PERCENTAGE },
-        shading: { fill: "0A2540" },
+        shading: { fill: colorPrimario },
         children: [
           new Paragraph({
             alignment: AlignmentType.CENTER,
@@ -70,17 +93,24 @@ export async function generarWordMinutaNaval(
       }),
       new TableCell({
         width: { size: 20, type: WidthType.PERCENTAGE },
-        shading: { fill: "0A2540" },
+        shading: { fill: colorPrimario },
         children: [
           new Paragraph({
             alignment: AlignmentType.LEFT,
-            children: [new TextRun({ text: "VISITANTE / FAMILIAR", bold: true, color: "FFFFFF", size: 16 })],
+            children: [
+              new TextRun({
+                text: isDynamic ? `${labelVisitanteSingular.toUpperCase()} / FAMILIAR` : "VISITANTE / FAMILIAR",
+                bold: true,
+                color: "FFFFFF",
+                size: 16,
+              }),
+            ],
           }),
         ],
       }),
       new TableCell({
         width: { size: 13, type: WidthType.PERCENTAGE },
-        shading: { fill: "0A2540" },
+        shading: { fill: colorPrimario },
         children: [
           new Paragraph({
             alignment: AlignmentType.CENTER,
@@ -90,7 +120,7 @@ export async function generarWordMinutaNaval(
       }),
       new TableCell({
         width: { size: 11, type: WidthType.PERCENTAGE },
-        shading: { fill: "0A2540" },
+        shading: { fill: colorPrimario },
         children: [
           new Paragraph({
             alignment: AlignmentType.CENTER,
@@ -100,27 +130,41 @@ export async function generarWordMinutaNaval(
       }),
       new TableCell({
         width: { size: 18, type: WidthType.PERCENTAGE },
-        shading: { fill: "0A2540" },
+        shading: { fill: colorPrimario },
         children: [
           new Paragraph({
             alignment: AlignmentType.LEFT,
-            children: [new TextRun({ text: "ESCUELA MILITAR", bold: true, color: "FFFFFF", size: 16 })],
+            children: [
+              new TextRun({
+                text: isDynamic ? labelEntidadSingular.toUpperCase() : "ESCUELA MILITAR",
+                bold: true,
+                color: "FFFFFF",
+                size: 16,
+              }),
+            ],
           }),
         ],
       }),
       new TableCell({
         width: { size: 18, type: WidthType.PERCENTAGE },
-        shading: { fill: "0A2540" },
+        shading: { fill: colorPrimario },
         children: [
           new Paragraph({
             alignment: AlignmentType.LEFT,
-            children: [new TextRun({ text: "DEPORTISTA ANFITRIÓN", bold: true, color: "FFFFFF", size: 16 })],
+            children: [
+              new TextRun({
+                text: isDynamic ? `${labelParticipanteSingular.toUpperCase()} ANFITRIÓN` : "DEPORTISTA ANFITRIÓN",
+                bold: true,
+                color: "FFFFFF",
+                size: 16,
+              }),
+            ],
           }),
         ],
       }),
       new TableCell({
         width: { size: 14, type: WidthType.PERCENTAGE },
-        shading: { fill: "0A2540" },
+        shading: { fill: colorPrimario },
         children: [
           new Paragraph({
             alignment: AlignmentType.CENTER,
@@ -274,10 +318,12 @@ export async function generarWordMinutaNaval(
                 alignment: AlignmentType.RIGHT,
                 children: [
                   new TextRun({
-                    text: 'ARMADA NACIONAL DE COLOMBIA — ESCUELA NAVAL DE CADETES "ALMIRANTE PADILLA"',
+                    text: isDynamic && marca?.organizacion
+                      ? marca.organizacion.toUpperCase()
+                      : 'ARMADA NACIONAL DE COLOMBIA — ESCUELA NAVAL DE CADETES "ALMIRANTE PADILLA"',
                     size: 15,
                     bold: true,
-                    color: "0A2540",
+                    color: colorPrimario,
                   }),
                 ],
               }),
@@ -291,7 +337,9 @@ export async function generarWordMinutaNaval(
                 alignment: AlignmentType.CENTER,
                 children: [
                   new TextRun({
-                    text: "Documento oficial de control de ingreso emitido por el Sistema Naval Interescuelas 2026. Conforme a la Ley 1581 de 2012.  |  Página ",
+                    text: isDynamic && marca?.nombre_actividad
+                      ? `Documento oficial de control de ingreso emitido por el sistema ${marca.nombre_actividad}. Conforme a la Ley 1581 de 2012.  |  Página `
+                      : "Documento oficial de control de ingreso emitido por el Sistema Naval Interescuelas 2026. Conforme a la Ley 1581 de 2012.  |  Página ",
                     size: 14,
                     color: "6B7280",
                   }),
@@ -324,10 +372,12 @@ export async function generarWordMinutaNaval(
             spacing: { before: 100, after: 60 },
             children: [
               new TextRun({
-                text: "REPUBLICA DE COLOMBIA — MINISTERIO DE DEFENSA NACIONAL",
+                text: isDynamic && marca?.organizacion
+                  ? marca.organizacion.toUpperCase()
+                  : "REPUBLICA DE COLOMBIA — MINISTERIO DE DEFENSA NACIONAL",
                 size: 18,
                 bold: true,
-                color: "0A2540",
+                color: colorPrimario,
               }),
             ],
           }),
@@ -336,10 +386,12 @@ export async function generarWordMinutaNaval(
             spacing: { before: 0, after: 120 },
             children: [
               new TextRun({
-                text: "JUEGOS INTERESCUELAS MILITARES 2026",
+                text: isDynamic && marca?.nombre_actividad
+                  ? marca.nombre_actividad.toUpperCase()
+                  : "JUEGOS INTERESCUELAS MILITARES 2026",
                 size: 20,
                 bold: true,
-                color: "0A2540",
+                color: colorPrimario,
               }),
             ],
           }),
@@ -363,7 +415,7 @@ export async function generarWordMinutaNaval(
               new TextRun({ text: "Fecha de Expedición: ", bold: true, size: 16 }),
               new TextRun({ text: fechaGeneracion, size: 16 }),
               new TextRun({ text: "   |   Filtro: ", bold: true, size: 16 }),
-              new TextRun({ text: opciones?.tituloFiltro || "Consolidado General", size: 16, color: "0A2540", bold: true }),
+              new TextRun({ text: opciones?.tituloFiltro || "Consolidado General", size: 16, color: colorPrimario, bold: true }),
               new TextRun({ text: "   |   Total Registros: ", bold: true, size: 16 }),
               new TextRun({ text: `${visitantes.length} (Aprobados: ${totalAprobados})`, size: 16, bold: true, color: "059669" }),
               new TextRun({ text: "   |   Vehículos Autorizados: ", bold: true, size: 16 }),
@@ -392,10 +444,10 @@ export async function generarWordMinutaNaval(
             spacing: { before: 400, after: 200 },
             children: [
               new TextRun({
-                text: "AUTORIZACIÓN Y AVAL DE SEGURIDAD MILITAR:",
+                text: isDynamic ? "AUTORIZACIÓN Y AVAL DE SEGURIDAD Y CONTROL:" : "AUTORIZACIÓN Y AVAL DE SEGURIDAD MILITAR:",
                 bold: true,
                 size: 16,
-                color: "0A2540",
+                color: colorPrimario,
               }),
             ],
           }),
@@ -422,11 +474,26 @@ export async function generarWordMinutaNaval(
                       }),
                       new Paragraph({
                         alignment: AlignmentType.CENTER,
-                        children: [new TextRun({ text: "OFICIAL DE SERVICIO Y SEGURIDAD", bold: true, size: 16, color: "0A2540" })],
+                        children: [
+                          new TextRun({
+                            text: isDynamic ? "RESPONSABLE DE SEGURIDAD Y CONTROL" : "OFICIAL DE SERVICIO Y SEGURIDAD",
+                            bold: true,
+                            size: 16,
+                            color: colorPrimario,
+                          }),
+                        ],
                       }),
                       new Paragraph({
                         alignment: AlignmentType.CENTER,
-                        children: [new TextRun({ text: 'Escuela Naval de Cadetes "Almirante Padilla"', size: 15, color: "4B5563" })],
+                        children: [
+                          new TextRun({
+                            text: isDynamic && marca?.organizacion
+                              ? marca.organizacion
+                              : 'Escuela Naval de Cadetes "Almirante Padilla"',
+                            size: 15,
+                            color: "4B5563",
+                          }),
+                        ],
                       }),
                     ],
                   }),
@@ -446,11 +513,26 @@ export async function generarWordMinutaNaval(
                       }),
                       new Paragraph({
                         alignment: AlignmentType.CENTER,
-                        children: [new TextRun({ text: "COORDINADOR GENERAL DE ACCESOS", bold: true, size: 16, color: "0A2540" })],
+                        children: [
+                          new TextRun({
+                            text: "COORDINADOR GENERAL DE ACCESOS",
+                            bold: true,
+                            size: 16,
+                            color: colorPrimario,
+                          }),
+                        ],
                       }),
                       new Paragraph({
                         alignment: AlignmentType.CENTER,
-                        children: [new TextRun({ text: "Comité Organizador Interescuelas 2026", size: 15, color: "4B5563" })],
+                        children: [
+                          new TextRun({
+                            text: isDynamic && marca?.nombre_actividad
+                              ? `Comité Organizador — ${marca.nombre_actividad}`
+                              : "Comité Organizador Interescuelas 2026",
+                            size: 15,
+                            color: "4B5563",
+                          }),
+                        ],
                       }),
                     ],
                   }),

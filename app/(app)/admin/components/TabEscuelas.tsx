@@ -6,6 +6,7 @@ import Input from "@/components/ui/Input";
 import Switch from "@/components/ui/Switch";
 import Modal from "@/components/ui/Modal";
 import { useToast } from "@/components/ui/Toast";
+import { useLabels } from "@/lib/marca";
 import {
   School,
   Plus,
@@ -29,6 +30,7 @@ export interface EscuelaItem {
 
 export function TabEscuelas() {
   const toast = useToast();
+  const { marca, t } = useLabels();
 
   const [escuelas, setEscuelas] = useState<EscuelaItem[]>([]);
   const [cargando, setCargando] = useState(true);
@@ -96,8 +98,8 @@ export function TabEscuelas() {
         toast.error("Error", data.error || "No se pudo actualizar el estado.");
       } else {
         toast.success(
-          nuevoEstado ? "Escuela Activada" : "Escuela Desactivada",
-          `La escuela "${escuela.nombre}" ahora está ${nuevoEstado ? "activa" : "inactiva"}.`
+          nuevoEstado ? `${t("Entidad")} Activada` : `${t("Entidad")} Desactivada`,
+          `La ${t("entidad").toLowerCase()} "${escuela.nombre}" ahora está ${nuevoEstado ? "activa" : "inactiva"}.`
         );
       }
     } catch {
@@ -169,7 +171,7 @@ export function TabEscuelas() {
       });
       const data = await res.json();
       if (res.ok && data.ok) {
-        toast.success("Escuela Actualizada", data.mensaje);
+        toast.success(`${t("Entidad")} Actualizada`, data.mensaje);
         setEscuelaEditando(null);
         cargarEscuelas();
       } else {
@@ -193,11 +195,11 @@ export function TabEscuelas() {
       });
       const data = await res.json();
       if (res.ok && data.ok) {
-        toast.success("Escuela Eliminada", data.mensaje);
+        toast.success(`${t("Entidad")} Eliminada`, data.mensaje);
         setEscuelaEliminando(null);
         cargarEscuelas();
       } else {
-        toast.error("No permitida", data.error || "No fue posible eliminar la escuela.");
+        toast.error("No permitida", data.error || `No fue posible eliminar ${t("la", "entidad")}.`);
       }
     } catch {
       toast.error("Error", "Error de conexión al eliminar.");
@@ -226,7 +228,7 @@ export function TabEscuelas() {
         <div className="p-4 rounded-3xl bg-white dark:bg-[#1C1C1E] border border-neutral-200/70 dark:border-neutral-800/80 shadow-sm flex items-center justify-between">
           <div>
             <span className="text-[11px] font-semibold uppercase tracking-wider text-neutral-400">
-              Total Escuelas
+              Total {t("Entidades")}
             </span>
             <p className="text-2xl font-black text-neutral-900 dark:text-white mt-1">
               {totalEscuelas}
@@ -254,7 +256,7 @@ export function TabEscuelas() {
         <div className="p-4 rounded-3xl bg-white dark:bg-[#1C1C1E] border border-neutral-200/70 dark:border-neutral-800/80 shadow-sm flex items-center justify-between">
           <div>
             <span className="text-[11px] font-semibold uppercase tracking-wider text-[#0A2540] dark:text-blue-400">
-              Deportistas Registrados
+              {t("Participantes")} Registrados
             </span>
             <p className="text-2xl font-black text-[#0A2540] dark:text-blue-400 mt-1">
               {totalDeportistas}
@@ -274,7 +276,7 @@ export function TabEscuelas() {
             type="text"
             value={busqueda}
             onChange={(e) => setBusqueda(e.target.value)}
-            placeholder="Buscar por nombre de escuela..."
+            placeholder={`Buscar por nombre de ${t("entidad").toLowerCase()}...`}
             className="w-full min-h-[44px] pl-10 pr-4 py-2.5 rounded-2xl bg-white dark:bg-[#1C1C1E] border border-neutral-200/70 dark:border-neutral-800/80 text-sm text-neutral-900 dark:text-white placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-[#0A2540] dark:focus:ring-blue-400 shadow-sm transition-all"
           />
         </div>
@@ -307,7 +309,7 @@ export function TabEscuelas() {
               className="flex-1 sm:flex-initial min-h-[44px] px-4 py-2.5 rounded-2xl bg-[#0A2540] hover:bg-[#071a2e] text-white text-xs sm:text-sm font-bold flex items-center justify-center gap-2 shadow-sm transition-all active:scale-[0.98]"
             >
               <Plus className="w-4 h-4" />
-              <span>Nueva Escuela</span>
+              <span>Nueva {t("Entidad")}</span>
             </button>
           </div>
         </div>
@@ -318,32 +320,32 @@ export function TabEscuelas() {
         <div className="p-4 sm:p-5 border-b border-neutral-100 dark:border-neutral-800 flex items-center justify-between">
           <div>
             <h3 className="text-base font-bold text-neutral-900 dark:text-white">
-              Catálogo de Escuelas Participantes
+              Catálogo de {t("Entidades")} Participantes
             </h3>
             <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-0.5">
-              Escuelas militares y policiales oficiales para la acreditación de deportistas.
+              Instituciones oficiales para la acreditación de {t("participantes")}.
             </p>
           </div>
           <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300">
-            {escuelasFiltradas.length} {escuelasFiltradas.length === 1 ? "escuela" : "escuelas"}
+            {escuelasFiltradas.length} {escuelasFiltradas.length === 1 ? t("entidad").toLowerCase() : t("entidades").toLowerCase()}
           </span>
         </div>
 
         {cargando ? (
           <div className="p-8 text-center text-neutral-400 text-sm">
             <RefreshCw className="w-6 h-6 animate-spin mx-auto mb-2 text-[#0A2540] dark:text-blue-400" />
-            Cargando catálogo de escuelas...
+            Cargando catálogo de {t("entidades")}...
           </div>
         ) : escuelasFiltradas.length === 0 ? (
           <div className="p-10 text-center">
             <School className="w-10 h-10 text-neutral-300 dark:text-neutral-600 mx-auto mb-2" />
             <p className="text-sm font-semibold text-neutral-700 dark:text-neutral-300">
-              No se encontraron escuelas
+              No se encontraron {t("entidades")}
             </p>
             <p className="text-xs text-neutral-400 mt-1 max-w-sm mx-auto">
               {busqueda
-                ? "Ninguna escuela coincide con la búsqueda introducida."
-                : "Aún no se han registrado escuelas en el catálogo."}
+                ? `Ninguna ${t("entidad").toLowerCase()} coincide con la búsqueda introducida.`
+                : `Aún no se han registrado ${t("entidades").toLowerCase()} en el catálogo.`}
             </p>
           </div>
         ) : (
@@ -386,7 +388,7 @@ export function TabEscuelas() {
                       <div className="flex items-center gap-3 mt-1.5 text-xs text-neutral-500 dark:text-neutral-400">
                         <span className="inline-flex items-center gap-1 font-medium text-neutral-700 dark:text-neutral-300">
                           <Users className="w-3.5 h-3.5 text-neutral-400" />
-                          {esc.deportistas_count} {esc.deportistas_count === 1 ? "deportista" : "deportistas"}
+                          {esc.deportistas_count} {esc.deportistas_count === 1 ? t("participante").toLowerCase() : t("participantes").toLowerCase()}
                         </span>
                         <span>•</span>
                         <span>
@@ -427,8 +429,8 @@ export function TabEscuelas() {
                         onClick={() => setEscuelaEliminando(esc)}
                         title={
                           tieneDeportistas
-                            ? "Protección: Esta escuela tiene deportistas asociados y no puede eliminarse."
-                            : "Eliminar escuela del catálogo"
+                            ? `Protección: Esta ${t("entidad").toLowerCase()} tiene ${t("participantes").toLowerCase()} asociados y no puede eliminarse.`
+                            : `Eliminar ${t("entidad").toLowerCase()} del catálogo`
                         }
                         className={`min-h-[40px] px-3 py-1.5 rounded-xl text-xs font-semibold inline-flex items-center justify-center gap-1.5 transition-all active:scale-95 ${
                           tieneDeportistas
@@ -452,12 +454,12 @@ export function TabEscuelas() {
       <Modal
         isOpen={modalCrearAbierto}
         onClose={() => setModalCrearAbierto(false)}
-        title="Nueva Escuela Oficial"
-        description="Agregue una nueva institución para la acreditación en los Inter Escuelas."
+        title={`Nueva ${t("Entidad")} Oficial`}
+        description={`Agregue una nueva institución para la acreditación en ${marca.nombre_actividad}.`}
       >
         <form onSubmit={handleCrear} className="space-y-4">
           <Input
-            label="Nombre de la Escuela *"
+            label={`Nombre de la ${t("Entidad")} *`}
             value={nuevoNombre}
             onChange={(e) => setNuevoNombre(e.target.value)}
             placeholder='Ej: Escuela Naval de Suboficiales "ARC Barranquilla"'
@@ -467,8 +469,8 @@ export function TabEscuelas() {
 
           <div className="p-3.5 rounded-2xl bg-neutral-50 dark:bg-neutral-800/60 border border-neutral-200/70 dark:border-neutral-700/60">
             <Switch
-              label="Habilitar para registro de deportistas"
-              description="Si está activa, los auxiliares podrán seleccionarla al registrar deportistas."
+              label={`Habilitar para registro de ${t("participantes")}`}
+              description={`Si está activa, los auxiliares podrán seleccionarla al registrar ${t("participantes")}.`}
               checked={nuevaActiva}
               onChange={setNuevaActiva}
               id="switch-nueva-escuela"
@@ -488,7 +490,7 @@ export function TabEscuelas() {
               disabled={guardandoCrear}
               className="min-h-[44px] px-6 py-2 rounded-2xl bg-[#0A2540] hover:bg-[#071a2e] text-white text-sm font-bold shadow-sm transition-all active:scale-95 disabled:opacity-50"
             >
-              {guardandoCrear ? "Guardando..." : "Crear Escuela"}
+              {guardandoCrear ? "Guardando..." : `Crear ${t("Entidad")}`}
             </button>
           </div>
         </form>
@@ -498,12 +500,12 @@ export function TabEscuelas() {
       <Modal
         isOpen={!!escuelaEditando}
         onClose={() => setEscuelaEditando(null)}
-        title="Editar Escuela"
+        title={`Editar ${t("Entidad")}`}
         description={`Modifique el nombre o estado de "${escuelaEditando?.nombre}".`}
       >
         <form onSubmit={handleGuardarEdit} className="space-y-4">
           <Input
-            label="Nombre de la Escuela *"
+            label={`Nombre de la ${t("Entidad")} *`}
             value={editNombre}
             onChange={(e) => setEditNombre(e.target.value)}
             required
@@ -512,7 +514,7 @@ export function TabEscuelas() {
 
           <div className="p-3.5 rounded-2xl bg-neutral-50 dark:bg-neutral-800/60 border border-neutral-200/70 dark:border-neutral-700/60">
             <Switch
-              label="Escuela Activa"
+              label={`${t("Entidad")} Activa`}
               description="Determina si está disponible en las listas de selección."
               checked={editActiva}
               onChange={setEditActiva}
@@ -524,7 +526,7 @@ export function TabEscuelas() {
             <div className="p-3 rounded-2xl bg-blue-50 dark:bg-blue-950/40 text-xs text-blue-800 dark:text-blue-300 flex items-center gap-2">
               <Users className="w-4 h-4 shrink-0" />
               <span>
-                Esta escuela cuenta con <strong>{escuelaEditando.deportistas_count}</strong> deportistas asociados.
+                Esta {t("entidad").toLowerCase()} cuenta con <strong>{escuelaEditando.deportistas_count}</strong> {t("participantes")} asociados.
               </span>
             </div>
           )}
@@ -555,7 +557,7 @@ export function TabEscuelas() {
         title={
           (escuelaEliminando?.deportistas_count || 0) > 0
             ? "Acción Protegida"
-            : "¿Eliminar Escuela?"
+            : `¿Eliminar ${t("Entidad")}?`
         }
       >
         <div className="space-y-4">
@@ -570,14 +572,14 @@ export function TabEscuelas() {
                   No es posible eliminar &quot;{escuelaEliminando?.nombre}&quot;
                 </p>
                 <p className="text-xs text-neutral-500 dark:text-neutral-400">
-                  Esta escuela tiene{" "}
+                  Esta {t("entidad").toLowerCase()} tiene{" "}
                   <strong className="text-neutral-800 dark:text-neutral-200">
-                    {escuelaEliminando?.deportistas_count} deportista(s)
+                    {escuelaEliminando?.deportistas_count} {t("participantes")}
                   </strong>{" "}
                   asociado(s). Para preservar la integridad de los datos históricos y registros de ingreso, la base de datos no permite su eliminación física.
                 </p>
                 <div className="p-3 rounded-2xl bg-amber-50 dark:bg-amber-950/30 text-xs text-amber-800 dark:text-amber-300 text-left mt-3">
-                  <strong>Recomendación:</strong> Desactive la escuela mediante el interruptor para que no aparezca en nuevas selecciones, conservando todos los registros asociados.
+                  <strong>Recomendación:</strong> Desactive {t("la", "entidad").toLowerCase()} mediante el interruptor para que no aparezca en nuevas selecciones, conservando todos los registros asociados.
                 </div>
               </div>
 
@@ -602,7 +604,7 @@ export function TabEscuelas() {
                   ¿Está seguro de eliminar &quot;{escuelaEliminando?.nombre}&quot;?
                 </p>
                 <p className="text-xs text-neutral-500 dark:text-neutral-400">
-                  Esta escuela no tiene deportistas asociados. Esta acción no se puede deshacer.
+                  Esta {t("entidad").toLowerCase()} no tiene {t("participantes")} asociados. Esta acción no se puede deshacer.
                 </p>
               </div>
 

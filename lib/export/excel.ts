@@ -1,5 +1,6 @@
-// lib/export/excel.ts — Generación de Libro Oficial de Excel para Ingreso Naval 2026
+// lib/export/excel.ts — Generación de Libro Oficial de Excel para Ingreso
 import ExcelJS from "exceljs";
+import type { ConfiguracionMarca } from "@/types/database";
 
 export interface VisitanteExportItem {
   id: string;
@@ -34,17 +35,44 @@ export async function generarExcelIngresoNaval(
   opciones?: {
     tituloFiltro?: string;
     nombreEscuelaFiltro?: string;
+    marca?: ConfiguracionMarca;
   }
 ): Promise<Buffer> {
+  const isDynamic = Boolean(opciones?.marca?.flag_marca_dinamica);
+  const marca = opciones?.marca;
+
   const workbook = new ExcelJS.Workbook();
-  workbook.creator = "Escuela Naval de Cadetes Almirante Padilla";
-  workbook.lastModifiedBy = "Sistema Control de Ingreso Naval";
+  workbook.creator = isDynamic && marca?.organizacion
+    ? marca.organizacion
+    : "Escuela Naval de Cadetes Almirante Padilla";
+  workbook.lastModifiedBy = isDynamic && marca?.nombre_actividad
+    ? `${marca.nombre_actividad} — Sistema de Acreditación`
+    : "Sistema Control de Ingreso Naval";
   workbook.created = new Date();
   workbook.modified = new Date();
 
-  const colorAzulNaval = "0A2540";
+  const parseColor = (hex?: string) => {
+    if (!hex) return "0A2540";
+    const clean = hex.replace("#", "").trim();
+    return clean.length === 6 ? clean : "0A2540";
+  };
+
+  const colorAzulNaval = isDynamic && marca?.color_acento ? parseColor(marca.color_acento) : "0A2540";
   const colorAzulSecundario = "1E3A8A";
   const colorBordeGris = "E5E7EB";
+
+  const labelEntidadSingular = isDynamic && marca?.vocabulario?.entidad?.titulo
+    ? marca.vocabulario.entidad.titulo
+    : "Escuela Militar";
+  const labelEntidadPlural = isDynamic && marca?.vocabulario?.entidad?.titulo_plural
+    ? marca.vocabulario.entidad.titulo_plural
+    : "Escuelas";
+  const labelParticipanteSingular = isDynamic && marca?.vocabulario?.participante?.titulo
+    ? marca.vocabulario.participante.titulo
+    : "Deportista";
+  const labelVisitanteSingular = isDynamic && marca?.vocabulario?.visitante?.titulo
+    ? marca.vocabulario.visitante.titulo
+    : "Visitante";
 
   // ─────────────────────────────────────────────────────────────
   // HOJA 1: RESUMEN EJECUTIVO / DASHBOARD
@@ -56,7 +84,9 @@ export async function generarExcelIngresoNaval(
   // Título Institucional
   wsResumen.mergeCells("B2:G2");
   const cellTitulo1 = wsResumen.getCell("B2");
-  cellTitulo1.value = 'ARMADA NACIONAL DE COLOMBIA — ESCUELA NAVAL DE CADETES "ALMIRANTE PADILLA"';
+  cellTitulo1.value = isDynamic && marca?.organizacion
+    ? marca.organizacion.toUpperCase()
+    : 'ARMADA NACIONAL DE COLOMBIA — ESCUELA NAVAL DE CADETES "ALMIRANTE PADILLA"';
   cellTitulo1.font = { name: "Arial", size: 12, bold: true, color: { argb: "FFFFFF" } };
   cellTitulo1.fill = { type: "pattern", pattern: "solid", fgColor: { argb: colorAzulNaval } };
   cellTitulo1.alignment = { horizontal: "center", vertical: "middle" };
@@ -64,7 +94,9 @@ export async function generarExcelIngresoNaval(
 
   wsResumen.mergeCells("B3:G3");
   const cellTitulo2 = wsResumen.getCell("B3");
-  cellTitulo2.value = "JUEGOS INTERESCUELAS MILITARES 2026 — CONTROL DE ACCESO Y ACREDITACIONES";
+  cellTitulo2.value = isDynamic && marca?.nombre_actividad
+    ? `${marca.nombre_actividad.toUpperCase()} — CONTROL DE ACCESO Y ACREDITACIONES`
+    : "JUEGOS INTERESCUELAS MILITARES 2026 — CONTROL DE ACCESO Y ACREDITACIONES";
   cellTitulo2.font = { name: "Arial", size: 11, bold: true, color: { argb: colorAzulNaval } };
   cellTitulo2.alignment = { horizontal: "center", vertical: "middle" };
   wsResumen.getRow(3).height = 24;
@@ -123,16 +155,19 @@ export async function generarExcelIngresoNaval(
     };
   });
 
-  // Tabla resumen por Escuelas
+  // Tabla resumen por Escuelas / Entidades
   wsResumen.mergeCells("B10:G10");
   const cellSubEscuelas = wsResumen.getCell("B10");
-  cellSubEscuelas.value = "DISTRIBUCIÓN POR ESCUELA DE FORMACIÓN";
+  cellSubEscuelas.value = isDynamic
+    ? `DISTRIBUCIÓN POR ${labelEntidadPlural.toUpperCase()}`
+    : "DISTRIBUCIÓN POR ESCUELA DE FORMACIÓN";
   cellSubEscuelas.font = { name: "Arial", size: 11, bold: true, color: { argb: colorAzulNaval } };
   cellSubEscuelas.alignment = { horizontal: "left", vertical: "middle" };
 
+  const sinEntidadLabel = isDynamic ? `Sin ${labelEntidadSingular} Asignada` : "Sin Escuela Asignada";
   const escuelasMap = new Map<string, { total: number; aprobados: number; pendientes: number; rechazados: number; vehiculos: number }>();
   visitantes.forEach((v) => {
-    const esc = v.escuela_nombre || "Sin Escuela Asignada";
+    const esc = v.escuela_nombre || sinEntidadLabel;
     const curr = escuelasMap.get(esc) || { total: 0, aprobados: 0, pendientes: 0, rechazados: 0, vehiculos: 0 };
     curr.total++;
     if (v.estado === "Aprobado") curr.aprobados++;
@@ -143,7 +178,7 @@ export async function generarExcelIngresoNaval(
   });
 
   const rowEscHeader = wsResumen.getRow(11);
-  rowEscHeader.values = ["", "Escuela Militar", "Total Solicitudes", "Aprobados", "Pendientes", "Rechazados", "Vehículos"];
+  rowEscHeader.values = ["", labelEntidadSingular, "Total Solicitudes", "Aprobados", "Pendientes", "Rechazados", "Vehículos"];
   rowEscHeader.font = { name: "Arial", size: 9, bold: true, color: { argb: "FFFFFF" } };
   rowEscHeader.height = 22;
 
@@ -199,9 +234,9 @@ export async function generarExcelIngresoNaval(
     "TIPO DOC",
     "N° DOCUMENTO",
     "PARENTESCO",
-    "ESCUELA",
-    "DEPORTISTA ANFITRIÓN",
-    "DOC DEPORTISTA",
+    labelEntidadSingular.toUpperCase(),
+    `${labelParticipanteSingular.toUpperCase()} ANFITRIÓN`,
+    `DOC ${labelParticipanteSingular.toUpperCase()}`,
     "FECHA DESDE",
     "FECHA HASTA",
     "VEHÍCULO",
@@ -315,10 +350,10 @@ export async function generarExcelIngresoNaval(
     "PLACA",
     "MODELO / COLOR",
     "ESTADO ACREDITACIÓN",
-    "CONDUCTOR / VISITANTE",
+    `CONDUCTOR / ${labelVisitanteSingular.toUpperCase()}`,
     "DOCUMENTO",
-    "ESCUELA",
-    "DEPORTISTA VINCULADO",
+    labelEntidadSingular.toUpperCase(),
+    `${labelParticipanteSingular.toUpperCase()} VINCULADO`,
     "VIGENCIA INGRESO",
   ];
 

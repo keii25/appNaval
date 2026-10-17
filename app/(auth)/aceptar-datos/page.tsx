@@ -5,9 +5,11 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { ShieldCheck, FileText, Check, AlertCircle, LogOut } from "lucide-react";
+import { useLabels } from "@/lib/marca";
 
 export default function AceptarDatosPage() {
   const router = useRouter();
+  const { marca, t } = useLabels();
 
   const [acepto, setAcepto] = useState(false);
   const [cargando, setCargando] = useState(false);
@@ -58,8 +60,8 @@ export default function AceptarDatosPage() {
         <div className="flex flex-col items-center mb-6 text-center">
           <div className="relative w-24 h-24 mb-3 drop-shadow-md transition-transform hover:scale-105 duration-300">
             <Image
-              src="/images/logo-interescuelas-2026.png"
-              alt="Logo Oficial XXX Juegos Interescuelas 2026"
+              src={marca.logo_claro_url || "/images/logo-interescuelas-2026.png"}
+              alt={marca.nombre_actividad || "Logo Oficial"}
               fill
               priority
               className="object-contain"
@@ -93,7 +95,7 @@ export default function AceptarDatosPage() {
             </p>
 
             <p>
-              En cumplimiento de la <strong>Ley 1581 de 2012</strong>, su Decreto Reglamentario 1377 de 2013 y demás normas concordantes, informamos que la <strong>Escuela Naval de Cadetes &ldquo;Almirante Padilla&rdquo;</strong> actuará como Responsable del Tratamiento de los datos personales suministrados a través de este sistema.
+              En cumplimiento de la <strong>Ley 1581 de 2012</strong>, su Decreto Reglamentario 1377 de 2013 y demás normas concordantes, informamos que la <strong>{marca.organizacion}</strong> actuará como Responsable del Tratamiento de los datos personales suministrados a través de este sistema.
             </p>
 
             <div>
@@ -101,16 +103,16 @@ export default function AceptarDatosPage() {
                 1. Finalidad del Tratamiento:
               </p>
               <ul className="list-disc pl-5 space-y-1 text-neutral-600 dark:text-neutral-300">
-                <li>Gestionar el registro y acreditación de visitantes (familiares y amigos) de los deportistas participantes en los Juegos Inter Escuelas.</li>
-                <li>Validar la identidad del personal en portería y puestos de guardia para el acceso seguro a las instalaciones militares navales.</li>
-                <li>Llevar control de vehículos autorizados (placas y modelos) que ingresen al recinto naval.</li>
-                <li>Garantizar la seguridad física y el orden dentro de la jurisdicción de la Escuela Naval.</li>
+                <li>Gestionar el registro y acreditación de {t("visitantes")} (familiares y amigos) de {t("del", "participante", true)} en {marca.nombre_actividad}.</li>
+                <li>Validar la identidad del personal en portería y puestos de guardia para el acceso seguro a las instalaciones.</li>
+                <li>Llevar control de vehículos autorizados (placas y modelos) que ingresen al recinto.</li>
+                <li>Garantizar la seguridad física y el orden dentro de la jurisdicción de {marca.organizacion}.</li>
               </ul>
             </div>
 
             <div>
               <p className="font-semibold text-neutral-700 dark:text-neutral-200 mb-1">
-                2. Declaración del Deportista / Usuario:
+                2. Declaración del {t("Participante")} / Usuario:
               </p>
               <p>
                 Al registrar información de terceros (familiares o amigos visitantes), usted declara bajo gravedad de juramento que cuenta con la debida autorización previa e informada de dichos titulares para suministrar sus datos de identificación y vehículos para los fines exclusivos del control de ingreso.

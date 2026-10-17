@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { obtenerDatosParaExportar } from "@/lib/export/fetchData";
 import { generarWordMinutaNaval } from "@/lib/export/word";
+import { getMarca } from "@/lib/marca/server";
 
 export const dynamic = "force-dynamic";
 
@@ -36,19 +37,28 @@ export async function GET(request: NextRequest) {
     const estado = searchParams.get("estado") || undefined;
     const vehiculo = searchParams.get("vehiculo") || undefined;
 
-    const { visitantes, nombreEscuelaFiltro, tituloFiltro } = await obtenerDatosParaExportar({
-      escuela_id: escuelaId,
-      estado,
-      vehiculo,
-    });
+    const [datosExportar, marca] = await Promise.all([
+      obtenerDatosParaExportar({
+        escuela_id: escuelaId,
+        estado,
+        vehiculo,
+      }),
+      getMarca(),
+    ]);
+
+    const { visitantes, nombreEscuelaFiltro, tituloFiltro } = datosExportar;
 
     const buffer = await generarWordMinutaNaval(visitantes, {
       tituloFiltro,
       nombreEscuelaFiltro,
+      marca,
     });
 
     const timestamp = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19);
-    const filename = `Minuta_Guardia_Naval_Interescuelas_2026_${timestamp}.docx`;
+    const prefix = marca.flag_marca_dinamica && marca.nombre_corto
+      ? `Minuta_Control_${marca.nombre_corto.replace(/[^a-zA-Z0-9_-]/g, "_")}`
+      : "Minuta_Guardia_Naval_Interescuelas_2026";
+    const filename = `${prefix}_${timestamp}.docx`;
 
     return new NextResponse(new Uint8Array(buffer), {
       status: 200,

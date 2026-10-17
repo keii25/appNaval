@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import ActionSheet from "@/components/ui/ActionSheet";
 import type { Rol } from "@/types/database";
+import { useLabels } from "@/lib/marca";
 
 export interface NavItem {
   label: string;
@@ -39,9 +40,11 @@ export function AdaptiveLayout({
   children,
   userRole = "auxiliar",
   userName = "Personal de Acreditación",
-  userSubtitle = "Inter Escuelas 2026",
+  userSubtitle,
   customNavItems,
 }: AdaptiveLayoutProps) {
+  const { marca, t } = useLabels();
+  const effectiveSubtitle = userSubtitle || marca.nombre_corto;
   const pathname = usePathname();
   const [isDark, setIsDark] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
@@ -87,11 +90,15 @@ export function AdaptiveLayout({
           { label: "Control Ingreso", href: "/porteria", icon: <ShieldCheck className="w-5 h-5" /> },
         ]
       : [
-          { label: "Deportistas", href: "/auxiliar", icon: <Users className="w-5 h-5" /> },
+          { label: t("Participantes"), href: "/auxiliar", icon: <Users className="w-5 h-5" /> },
         ]);
 
   const handleLogout = async () => {
     try {
+      if (typeof window !== "undefined") {
+        localStorage.removeItem("naval_user_role");
+        localStorage.removeItem("naval_perfil");
+      }
       await fetch("/api/auth/logout", { method: "POST" });
     } finally {
       window.location.href = "/login";
@@ -113,8 +120,8 @@ export function AdaptiveLayout({
               <div className="w-10 h-10 rounded-2xl bg-white dark:bg-neutral-800 p-1 flex items-center justify-center shrink-0 shadow-sm border border-neutral-200/80 dark:border-neutral-700/80">
                 <div className="relative w-full h-full">
                   <Image
-                    src="/images/logo-interescuelas-2026.png"
-                    alt="Escudo Oficial Interescuelas 2026"
+                    src={marca.logo_claro_url || "/images/logo-interescuelas-2026.png"}
+                    alt={marca.nombre_actividad || "Escudo Oficial"}
                     fill
                     className="object-contain"
                     sizes="40px"
@@ -125,10 +132,10 @@ export function AdaptiveLayout({
               {!collapsed && (
                 <div className="truncate">
                   <h2 className="text-sm font-bold tracking-tight text-neutral-900 dark:text-white leading-snug">
-                    Escuela Naval
+                    {marca.organizacion}
                   </h2>
                   <p className="text-[11px] text-neutral-400 dark:text-neutral-500 font-medium truncate">
-                    Inter Escuelas 2026
+                    {marca.nombre_corto}
                   </p>
                 </div>
               )}
@@ -179,7 +186,7 @@ export function AdaptiveLayout({
                 {userName}
               </p>
               <div className="flex items-center justify-between mt-0.5 text-neutral-400">
-                <span className="truncate">{userSubtitle}</span>
+                <span className="truncate">{effectiveSubtitle}</span>
                 <span className="uppercase text-[10px] font-mono px-1.5 py-0.5 rounded-md bg-blue-50 dark:bg-blue-950/40 text-[#0A2540] dark:text-blue-300 font-semibold">
                   {userRole}
                 </span>
@@ -230,8 +237,8 @@ export function AdaptiveLayout({
             <div className="w-8 h-8 rounded-xl bg-white dark:bg-neutral-800 p-0.5 flex items-center justify-center shadow-sm shrink-0 border border-neutral-200/80 dark:border-neutral-700/80">
               <div className="relative w-full h-full">
                 <Image
-                  src="/images/logo-interescuelas-2026.png"
-                  alt="Escudo Oficial"
+                  src={marca.logo_claro_url || "/images/logo-interescuelas-2026.png"}
+                  alt={marca.nombre_actividad || "Escudo Oficial"}
                   fill
                   className="object-contain"
                   sizes="32px"
@@ -241,9 +248,9 @@ export function AdaptiveLayout({
             </div>
             <div className="min-w-0">
               <p className="text-xs font-bold text-neutral-900 dark:text-white leading-tight truncate">
-                Escuela Naval
+                {marca.organizacion}
               </p>
-              <p className="text-[10px] text-neutral-400 leading-none truncate">Inter Escuelas 2026</p>
+              <p className="text-[10px] text-neutral-400 leading-none truncate">{marca.nombre_corto}</p>
             </div>
           </div>
 
