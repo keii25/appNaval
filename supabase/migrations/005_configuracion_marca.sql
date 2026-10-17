@@ -8,6 +8,12 @@
 -- 3. Feature flag apagado por defecto (flag_marca_dinamica = false).
 -- ============================================================
 
+-- 0. ASEGURAR SESIÓN CON ROL POSTGRES (SUPERUSUARIO EN SUPABASE)
+RESET ROLE;
+SET ROLE postgres;
+GRANT USAGE, CREATE ON SCHEMA public TO postgres;
+GRANT ALL ON SCHEMA public TO postgres;
+
 -- 1. TABLA: configuracion_marca (Singleton id=1)
 CREATE TABLE IF NOT EXISTS public.configuracion_marca (
   id integer PRIMARY KEY DEFAULT 1 CHECK (id = 1),

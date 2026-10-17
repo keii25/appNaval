@@ -3,6 +3,9 @@
 -- Script de Reversa: Eliminar configuracion_marca y bucket marca
 -- ============================================================
 
+RESET ROLE;
+SET ROLE postgres;
+
 -- 1. Eliminar políticas de Storage
 DROP POLICY IF EXISTS "Solo admin elimina objetos bucket marca" ON storage.objects;
 DROP POLICY IF EXISTS "Solo admin modifica objetos bucket marca" ON storage.objects;
