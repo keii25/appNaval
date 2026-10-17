@@ -13,6 +13,11 @@ import {
   AlertCircle,
   CheckCircle2,
   Clock,
+  KeyRound,
+  Lock,
+  Eye,
+  EyeOff,
+  Shield,
 } from "lucide-react";
 
 export function TabConfiguracion() {
@@ -23,6 +28,14 @@ export function TabConfiguracion() {
   const [cargando, setCargando] = useState(true);
   const [guardando, setGuardando] = useState(false);
   const [ultimaActualizacion, setUltimaActualizacion] = useState<string | null>(null);
+
+  // Estados para el cambio de contraseña del admin
+  const [claveNueva, setClaveNueva] = useState("");
+  const [confirmarClave, setConfirmarClave] = useState("");
+  const [mostrarClave, setMostrarClave] = useState(false);
+  const [guardandoClave, setGuardandoClave] = useState(false);
+  const [errorClave, setErrorClave] = useState<string | null>(null);
+  const [exitoClave, setExitoClave] = useState(false);
 
   // Cargar configuración actual
   const cargarConfig = useCallback(async () => {
@@ -82,6 +95,53 @@ export function TabConfiguracion() {
       toast.error("Error", "Error de comunicación con el servidor.");
     } finally {
       setGuardando(false);
+    }
+  };
+
+  const handleCambiarClave = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setErrorClave(null);
+    setExitoClave(false);
+
+    if (claveNueva.length < 8) {
+      setErrorClave("La nueva contraseña debe tener al menos 8 caracteres.");
+      return;
+    }
+
+    if (claveNueva !== confirmarClave) {
+      setErrorClave("Las contraseñas no coinciden.");
+      return;
+    }
+
+    setGuardandoClave(true);
+    try {
+      const res = await fetch("/api/auth/cambiar-clave", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          clave_nueva: claveNueva,
+          confirmar_clave: confirmarClave,
+        }),
+      });
+
+      const data = await res.json();
+      if (res.ok && data.ok) {
+        toast.success(
+          "Contraseña Actualizada",
+          "Tu contraseña de Administrador ha sido cambiada con éxito."
+        );
+        setClaveNueva("");
+        setConfirmarClave("");
+        setExitoClave(true);
+      } else {
+        setErrorClave(data.error || "No fue posible actualizar la contraseña.");
+        toast.error("Error al cambiar contraseña", data.error || "Intenta nuevamente.");
+      }
+    } catch {
+      setErrorClave("Error de comunicación con el servidor.");
+      toast.error("Error", "Error de red al actualizar la contraseña.");
+    } finally {
+      setGuardandoClave(false);
     }
   };
 
@@ -192,6 +252,117 @@ export function TabConfiguracion() {
             </div>
           </form>
         )}
+      </div>
+
+      {/* Tarjeta de Seguridad y Contraseña del Administrador */}
+      <div className="rounded-3xl bg-white dark:bg-[#1C1C1E] border border-neutral-200/70 dark:border-neutral-800/80 shadow-sm overflow-hidden">
+        <div className="p-5 border-b border-neutral-100 dark:border-neutral-800 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-2xl bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
+              <KeyRound className="w-5 h-5" />
+            </div>
+            <div>
+              <h4 className="text-sm font-bold uppercase tracking-wider text-neutral-900 dark:text-white">
+                Seguridad de la Cuenta de Administrador
+              </h4>
+              <p className="text-xs text-neutral-400 mt-0.5">
+                Cambia la clave de acceso de esta cuenta cuando lo desees.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <form onSubmit={handleCambiarClave} className="p-5 sm:p-6 space-y-5">
+          {errorClave && (
+            <div
+              role="alert"
+              className="p-3.5 rounded-2xl bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900/60 text-red-800 dark:text-red-200 text-xs sm:text-sm flex items-start gap-2.5"
+            >
+              <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
+              <span>{errorClave}</span>
+            </div>
+          )}
+
+          {exitoClave && (
+            <div
+              role="alert"
+              className="p-3.5 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-900/60 text-emerald-800 dark:text-emerald-200 text-xs sm:text-sm flex items-start gap-2.5"
+            >
+              <CheckCircle2 className="w-4 h-4 mt-0.5 shrink-0" />
+              <span>Contraseña actualizada correctamente. Puedes usarla en tu próximo inicio de sesión.</span>
+            </div>
+          )}
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {/* Nueva Contraseña */}
+            <div className="space-y-1.5">
+              <label className="block text-xs font-semibold text-neutral-700 dark:text-neutral-300">
+                Nueva Contraseña
+              </label>
+              <div className="relative">
+                <input
+                  type={mostrarClave ? "text" : "password"}
+                  value={claveNueva}
+                  onChange={(e) => setClaveNueva(e.target.value)}
+                  placeholder="Mínimo 8 caracteres"
+                  required
+                  minLength={8}
+                  className="w-full pl-3.5 pr-10 py-2.5 rounded-2xl bg-neutral-100 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 text-sm text-neutral-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#0A2540] dark:focus:ring-blue-400 transition-all"
+                />
+                <button
+                  type="button"
+                  tabIndex={-1}
+                  onClick={() => setMostrarClave(!mostrarClave)}
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-200"
+                >
+                  {mostrarClave ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
+            </div>
+
+            {/* Confirmar Contraseña */}
+            <div className="space-y-1.5">
+              <label className="block text-xs font-semibold text-neutral-700 dark:text-neutral-300">
+                Confirmar Nueva Contraseña
+              </label>
+              <div className="relative">
+                <input
+                  type={mostrarClave ? "text" : "password"}
+                  value={confirmarClave}
+                  onChange={(e) => setConfirmarClave(e.target.value)}
+                  placeholder="Repite la contraseña"
+                  required
+                  minLength={8}
+                  className="w-full pl-3.5 pr-10 py-2.5 rounded-2xl bg-neutral-100 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 text-sm text-neutral-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#0A2540] dark:focus:ring-blue-400 transition-all"
+                />
+              </div>
+            </div>
+          </div>
+
+          <p className="text-xs text-neutral-400">
+            Requisito: Debe tener al menos 8 caracteres y no coincidir con tu número de identificación ni usuario.
+          </p>
+
+          <div className="pt-2 flex items-center justify-end">
+            <button
+              type="submit"
+              disabled={guardandoClave || !claveNueva || !confirmarClave}
+              className="w-full sm:w-auto min-h-[44px] px-6 py-2.5 rounded-2xl bg-[#0A2540] dark:bg-blue-600 hover:opacity-90 text-white text-sm font-bold shadow-sm transition-all active:scale-95 flex items-center justify-center gap-2 disabled:opacity-50"
+            >
+              {guardandoClave ? (
+                <>
+                  <RefreshCw className="w-4 h-4 animate-spin shrink-0" />
+                  <span>Actualizando...</span>
+                </>
+              ) : (
+                <>
+                  <Lock className="w-4 h-4 shrink-0" />
+                  <span>Actualizar Contraseña</span>
+                </>
+              )}
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   );
