@@ -1,0 +1,36 @@
+# Dependencias
+node_modules/
+/.pnp
+.pnp.js
+
+# Build y salida de Next.js
+.next/
+out/
+build/
+dist/
+
+# Variables de entorno y secretos (NUNCA subir a git)
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+*.env
+
+# Archivos de caché y compilación
+*.tsbuildinfo
+tsconfig.tsbuildinfo
+.eslintcache
+
+# Logs y reportes de prueba
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+load-report-*.json
+
+# Archivos del sistema operativo y editores
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

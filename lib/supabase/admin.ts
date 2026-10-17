@@ -1,0 +1,21 @@
+﻿// lib/supabase/admin.ts — Cliente con service_role (SOLO en el servidor)
+// NUNCA exponer este cliente al navegador
+import { createClient as createSupabaseClient } from "@supabase/supabase-js";
+
+export function createAdminClient() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+  if (!url || !key) {
+    throw new Error(
+      "Faltan variables de entorno SUPABASE_URL o SUPABASE_SERVICE_ROLE_KEY"
+    );
+  }
+
+  return createSupabaseClient(url, key, {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false,
+    },
+  });
+}
