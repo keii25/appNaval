@@ -4,6 +4,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useToast } from "@/components/ui/Toast";
 import type { EstadoVisitante } from "@/types/database";
+import { useLabels } from "@/lib/marca";
 import {
   Users,
   Search,
@@ -57,6 +58,7 @@ interface EscuelaOption {
 
 export function TabVisitantes() {
   const toast = useToast();
+  const { marca, t } = useLabels();
 
   const [visitantes, setVisitantes] = useState<VisitanteAdminItem[]>([]);
   const [stats, setStats] = useState<StatsVisitantes>({
@@ -157,7 +159,7 @@ export function TabVisitantes() {
         setVisitantes(data.visitantes || []);
         if (data.stats) setStats(data.stats);
       } else {
-        toast.error("Error", data.error || "No fue posible cargar los visitantes.");
+        toast.error("Error", data.error || `No fue posible cargar ${t("los", "visitante", true)}.`);
       }
     } catch {
       toast.error("Error", "Error al comunicarse con el servidor.");
@@ -192,9 +194,9 @@ export function TabVisitantes() {
       } else {
         toast.success(
           nuevoEstado === "Aprobado"
-            ? "Visitante Aprobado"
+            ? `${t("Visitante")} Aprobado`
             : nuevoEstado === "Rechazado"
-            ? "Visitante Rechazado"
+            ? `${t("Visitante")} Rechazado`
             : "Estado Restablecido",
           data.mensaje
         );
@@ -276,7 +278,7 @@ export function TabVisitantes() {
             type="text"
             value={busqueda}
             onChange={(e) => setBusqueda(e.target.value)}
-            placeholder="Buscar por visitante, cédula, placa o deportista..."
+            placeholder={`Buscar por ${t("visitante").toLowerCase()}, cédula, placa o ${t("participante").toLowerCase()}...`}
             className="w-full min-h-[44px] pl-10 pr-4 py-2.5 rounded-2xl bg-white dark:bg-[#1C1C1E] border border-neutral-200/70 dark:border-neutral-800/80 text-sm text-neutral-900 dark:text-white placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-[#0A2540] dark:focus:ring-blue-400 shadow-sm transition-all"
           />
         </div>
@@ -300,7 +302,7 @@ export function TabVisitantes() {
             onChange={(e) => setFiltroEscuela(e.target.value)}
             className="w-full sm:w-auto min-h-[44px] px-3 py-2 rounded-2xl bg-white dark:bg-[#1C1C1E] border border-neutral-200/70 dark:border-neutral-800/80 text-xs sm:text-sm font-semibold text-neutral-700 dark:text-neutral-200 focus:outline-none focus:ring-2 focus:ring-[#0A2540] shadow-sm"
           >
-            <option value="todas">Todas las escuelas</option>
+            <option value="todas">Todas las {t("entidades").toLowerCase()}</option>
             {escuelas.map((esc) => (
               <option key={esc.id} value={esc.id}>
                 {esc.nombre}
@@ -382,7 +384,7 @@ export function TabVisitantes() {
             type="button"
             disabled={descargando !== null}
             onClick={() => descargarReporte("word", true)}
-            title="Generar minuta Word únicamente con visitantes aprobados para guardia"
+            title={`Generar minuta Word únicamente con ${t("visitantes").toLowerCase()} aprobados para guardia`}
             className="min-h-[44px] px-3 py-2 rounded-2xl bg-white dark:bg-[#1C1C1E] border border-neutral-200/70 dark:border-neutral-800/80 hover:bg-neutral-100 dark:hover:bg-neutral-800 disabled:opacity-50 text-neutral-800 dark:text-neutral-200 text-xs font-semibold inline-flex items-center justify-center gap-1.5 transition-all active:scale-[0.97] shadow-sm w-full"
           >
             <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
@@ -410,13 +412,13 @@ export function TabVisitantes() {
         {cargando ? (
           <div className="p-10 text-center text-neutral-400 text-sm">
             <RefreshCw className="w-6 h-6 animate-spin mx-auto mb-2 text-[#0A2540] dark:text-blue-400" />
-            Cargando visitantes...
+            Cargando {t("visitantes").toLowerCase()}...
           </div>
         ) : visitantes.length === 0 ? (
           <div className="p-10 text-center">
             <Users className="w-10 h-10 text-neutral-300 dark:text-neutral-600 mx-auto mb-2" />
             <p className="text-sm font-semibold text-neutral-700 dark:text-neutral-300">
-              No se encontraron visitantes
+              No se encontraron {t("visitantes").toLowerCase()}
             </p>
             <p className="text-xs text-neutral-400 mt-1 max-w-sm mx-auto">
               No hay registros que coincidan con los criterios de búsqueda y filtros seleccionados.
@@ -461,7 +463,7 @@ export function TabVisitantes() {
 
                       <div className="flex items-center gap-3 mt-1 text-xs text-neutral-500 dark:text-neutral-400 flex-wrap">
                         <span className="text-neutral-700 dark:text-neutral-300 font-medium">
-                          Deportista: <strong>{v.deportista_nombre}</strong> (CC {v.deportista_cedula})
+                          {t("Participante")}: <strong>{v.deportista_nombre}</strong> (CC {v.deportista_cedula})
                         </span>
                         <span>•</span>
                         <span className="text-[#0A2540] dark:text-blue-400 font-semibold">

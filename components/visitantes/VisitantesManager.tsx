@@ -14,6 +14,7 @@ import type {
   TipoDocumento,
   Rol,
 } from "@/types/database";
+import { useLabels } from "@/lib/marca";
 import {
   Users,
   UserPlus,
@@ -52,6 +53,7 @@ export function VisitantesManager({
   rutaRetorno = "/auxiliar",
 }: VisitantesManagerProps) {
   const toast = useToast();
+  const { marca, t } = useLabels();
 
   const [deportista, setDeportista] = useState<DeportistaHeaderData | null>(null);
   const [visitantes, setVisitantes] = useState<Visitante[]>([]);
@@ -181,7 +183,7 @@ export function VisitantesManager({
       const data = await res.json();
 
       if (res.ok && data.ok) {
-        toast.success("Visitante Agregado", data.mensaje);
+        toast.success(`${t("Visitante")} Agregado`, data.mensaje);
         setModalAgregarAbierto(false);
         // Reset campos
         setNuevoNombre("");
@@ -266,7 +268,7 @@ export function VisitantesManager({
       const data = await res.json();
 
       if (res.ok && data.ok) {
-        toast.success("Visitante Removido", data.mensaje);
+        toast.success(`${t("Visitante")} Removido`, data.mensaje);
         setVisitanteEliminando(null);
         cargarDatos();
       } else {
@@ -292,7 +294,7 @@ export function VisitantesManager({
           className="inline-flex items-center gap-2 text-xs sm:text-sm font-semibold text-neutral-600 dark:text-neutral-300 hover:text-[#0A2540] dark:hover:text-white transition-colors py-1 px-2.5 rounded-xl bg-neutral-100 hover:bg-neutral-200/70 dark:bg-neutral-800 dark:hover:bg-neutral-700 w-fit"
         >
           <ArrowLeft className="w-4 h-4" />
-          <span>Volver al Padrón de Deportistas</span>
+          <span>Volver al Padrón de {t("Participantes")}</span>
         </Link>
 
         <button
@@ -315,7 +317,7 @@ export function VisitantesManager({
             <div>
               <div className="flex items-center gap-2 flex-wrap">
                 <h2 className="text-lg sm:text-xl font-bold tracking-tight text-neutral-900 dark:text-white">
-                  {deportista?.nombre_completo || "Cargando deportista..."}
+                  {deportista?.nombre_completo || `Cargando ${t("participante")}...`}
                 </h2>
                 <span className="text-xs font-mono font-bold px-2.5 py-0.5 rounded-full bg-neutral-100 dark:bg-neutral-800 text-neutral-800 dark:text-neutral-200">
                   CC {deportista?.cedula}
@@ -344,7 +346,7 @@ export function VisitantesManager({
             className="w-full sm:w-auto min-h-[44px] px-5 py-2.5 rounded-2xl bg-[#0A2540] hover:bg-[#071a2e] text-white text-xs sm:text-sm font-bold flex items-center justify-center gap-2 shadow-sm transition-all active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed shrink-0"
           >
             <UserPlus className="w-4 h-4 shrink-0" />
-            <span>Agregar Visitante</span>
+            <span>Agregar {t("Visitante")}</span>
           </button>
         </div>
 
@@ -410,10 +412,10 @@ export function VisitantesManager({
         <div className="p-4 sm:p-5 border-b border-neutral-100 dark:border-neutral-800 flex items-center justify-between">
           <div>
             <h3 className="text-base font-bold text-neutral-900 dark:text-white">
-              Acompañantes y Visitantes Acreditados
+              Acompañantes y {t("Visitantes")} Acreditados
             </h3>
             <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-0.5">
-              Familiares y amigos autorizados para el ingreso al recinto naval.
+              Familiares y acompañantes autorizados para el ingreso a {marca.organizacion}.
             </p>
           </div>
           <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300">
@@ -424,7 +426,7 @@ export function VisitantesManager({
         {cargando ? (
           <div className="p-10 text-center text-neutral-400 text-sm">
             <RefreshCw className="w-6 h-6 animate-spin mx-auto mb-2 text-[#0A2540] dark:text-blue-400" />
-            Cargando visitantes...
+            Cargando {t("visitantes")}...
           </div>
         ) : visitantes.length === 0 ? (
           <div className="p-10 text-center">
@@ -433,7 +435,7 @@ export function VisitantesManager({
               Sin acompañantes registrados
             </p>
             <p className="text-xs text-neutral-400 mt-1 max-w-sm mx-auto">
-              Este deportista aún no tiene visitantes acreditados. Haga clic en &quot;Agregar Visitante&quot; para registrar uno nuevo.
+              Este {t("participante")} aún no tiene {t("visitantes")} acreditados. Haga clic en &quot;Agregar {t("Visitante")}&quot; para registrar uno nuevo.
             </p>
           </div>
         ) : (
@@ -501,7 +503,7 @@ export function VisitantesManager({
                             onClick={() => handleCambiarEstado(v.id, "Aprobado")}
                             disabled={procesandoEstado === v.id}
                             className="min-h-[40px] px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold inline-flex items-center gap-1.5 transition-all shadow-xs disabled:opacity-50"
-                            title="Autorizar ingreso oficial a la Escuela Naval"
+                            title={`Autorizar ingreso oficial a ${marca.organizacion}`}
                           >
                             <CheckCircle2 className="w-3.5 h-3.5" />
                             <span>Aprobar</span>
@@ -513,7 +515,7 @@ export function VisitantesManager({
                             onClick={() => handleCambiarEstado(v.id, "Rechazado")}
                             disabled={procesandoEstado === v.id}
                             className="min-h-[40px] px-3 py-1.5 rounded-xl bg-rose-100 hover:bg-rose-200 text-rose-800 dark:bg-rose-950/60 dark:hover:bg-rose-900 dark:text-rose-300 text-xs font-bold inline-flex items-center gap-1.5 transition-all disabled:opacity-50"
-                            title="Denegar ingreso a la Escuela Naval"
+                            title={`Denegar ingreso a ${marca.organizacion}`}
                           >
                             <XCircle className="w-3.5 h-3.5" />
                             <span>Denegar</span>
@@ -551,13 +553,13 @@ export function VisitantesManager({
       <Modal
         isOpen={modalAgregarAbierto}
         onClose={() => setModalAgregarAbierto(false)}
-        title="Acreditar Nuevo Visitante"
-        description={`Registro de acompañante para ${deportista?.nombre_completo}.`}
+        title={`Acreditar Nuevo ${t("Visitante")}`}
+        description={`Registro de ${t("visitante")} para ${deportista?.nombre_completo}.`}
         maxWidth="lg"
       >
         <form onSubmit={handleAgregar} className="space-y-4">
           <Input
-            label="Nombre Completo del Visitante *"
+            label={`Nombre Completo del ${t("Visitante")} *`}
             value={nuevoNombre}
             onChange={(e) => setNuevoNombre(e.target.value)}
             placeholder="Ej: María Fernanda Gómez"
@@ -692,7 +694,7 @@ export function VisitantesManager({
               disabled={guardandoCrear}
               className="min-h-[44px] px-6 py-2 rounded-2xl bg-[#0A2540] hover:bg-[#071a2e] text-white text-sm font-bold shadow-sm transition-all active:scale-95 disabled:opacity-50"
             >
-              {guardandoCrear ? "Registrando..." : "Acreditar Visitante"}
+              {guardandoCrear ? "Registrando..." : `Acreditar ${t("Visitante")}`}
             </button>
           </div>
         </form>
@@ -702,7 +704,7 @@ export function VisitantesManager({
       <Modal
         isOpen={!!visitanteEditando}
         onClose={() => setVisitanteEditando(null)}
-        title="Editar Visitante"
+        title={`Editar ${t("Visitante")}`}
         description={`Modifique los datos de ${visitanteEditando?.nombre}.`}
         maxWidth="lg"
       >
@@ -834,7 +836,7 @@ export function VisitantesManager({
       <Modal
         isOpen={!!visitanteEliminando}
         onClose={() => setVisitanteEliminando(null)}
-        title="¿Eliminar Acreditación?"
+        title={`¿Eliminar ${t("Visitante")}?`}
       >
         <div className="space-y-4">
           <div className="w-12 h-12 rounded-2xl bg-rose-100 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 flex items-center justify-center mx-auto">
@@ -846,7 +848,7 @@ export function VisitantesManager({
               ¿Está seguro de eliminar a &quot;{visitanteEliminando?.nombre}&quot;?
             </p>
             <p className="text-xs text-neutral-500 dark:text-neutral-400">
-              Esta acción revocará la autorización de ingreso a la base militar y liberará 1 cupo para el deportista.
+              Esta acción revocará la autorización de ingreso y liberará 1 cupo para {t("el", "participante")}.
             </p>
           </div>
 

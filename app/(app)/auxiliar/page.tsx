@@ -7,13 +7,16 @@ import LargeTitleHeader from "@/components/layout/LargeTitleHeader";
 import ToastProvider from "@/components/ui/Toast";
 import DeportistasManager from "@/components/deportistas/DeportistasManager";
 import type { Perfil } from "@/types/database";
+import { useLabels } from "@/lib/marca";
 
 function AuxiliarDashboard() {
+  const { t } = useLabels();
+
   return (
     <div className="space-y-6 pb-20">
       <LargeTitleHeader
-        title="Registro de Deportistas"
-        subtitle="Mesa de acreditación, validación de identidad y registro de visitantes autorizados."
+        title={`Registro de ${t("Participantes")}`}
+        subtitle={`Mesa de acreditación, validación de identidad y registro de ${t("visitantes")} autorizados.`}
       />
 
       <DeportistasManager rolUsuario="auxiliar" baseRutaVisitantes="/auxiliar" />

@@ -8,6 +8,7 @@ import ToastProvider, { useToast } from "@/components/ui/Toast";
 import { SegmentedControl } from "@/components/ui/SegmentedControl";
 import Modal from "@/components/ui/Modal";
 import type { Perfil } from "@/types/database";
+import { useLabels } from "@/lib/marca";
 import {
   ShieldCheck,
   Search,
@@ -75,6 +76,7 @@ type FiltroTipo = "todos" | "deportistas" | "visitantes" | "vehiculos";
 
 function PorteriaDashboard({ perfil }: { perfil?: Perfil | null }) {
   const toast = useToast();
+  const { marca, t } = useLabels();
 
   const [busqueda, setBusqueda] = useState("");
   const [todosLosRegistros, setTodosLosRegistros] = useState<PorteriaRegistro[]>([]);
@@ -178,7 +180,7 @@ function PorteriaDashboard({ perfil }: { perfil?: Perfil | null }) {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <LargeTitleHeader
           title="Control de Portería"
-          subtitle="Verificación instantánea de ingreso de familiares y vehículos a la Escuela Naval."
+          subtitle={`Verificación instantánea de ingreso de ${t("visitantes").toLowerCase()} y vehículos a ${marca.organizacion}.`}
         />
 
         <div className="flex items-center gap-2 self-start sm:self-auto">
@@ -196,7 +198,7 @@ function PorteriaDashboard({ perfil }: { perfil?: Perfil | null }) {
             <Trophy className="w-5 h-5" />
           </div>
           <div className="min-w-0">
-            <p className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-neutral-400">Atletas</p>
+            <p className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-neutral-400">{t("Participantes")}</p>
             <p className="text-base sm:text-lg font-black text-neutral-900 dark:text-white leading-tight">
               {totalAtletas}
             </p>
@@ -208,7 +210,7 @@ function PorteriaDashboard({ perfil }: { perfil?: Perfil | null }) {
             <Users className="w-5 h-5" />
           </div>
           <div className="min-w-0">
-            <p className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-neutral-400">Acompañantes</p>
+            <p className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-neutral-400">{t("Visitantes")}</p>
             <p className="text-base sm:text-lg font-black text-neutral-900 dark:text-white leading-tight">
               {totalAcompanantes}
             </p>
@@ -268,7 +270,7 @@ function PorteriaDashboard({ perfil }: { perfil?: Perfil | null }) {
         </form>
 
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs text-neutral-400 px-1 pt-1 border-t border-neutral-100 dark:border-neutral-800/60">
-          <span>Consulta instantánea de Atletas y Acompañantes autorizados.</span>
+          <span>Consulta instantánea de {t("participantes")} y {t("visitantes")} autorizados.</span>
           {fechaHoy && (
             <span className="font-mono text-neutral-500 dark:text-neutral-400">
               Fecha de consulta: {fechaHoy}
@@ -287,8 +289,8 @@ function PorteriaDashboard({ perfil }: { perfil?: Perfil | null }) {
         }}
         options={[
           { value: "todos", label: `Todos (${todosLosRegistros.length})` },
-          { value: "deportistas", label: `Atletas (${totalAtletas})` },
-          { value: "visitantes", label: `Acompañantes (${totalAcompanantes})` },
+          { value: "deportistas", label: `${t("Participantes")} (${totalAtletas})` },
+          { value: "visitantes", label: `${t("Visitantes")} (${totalAcompanantes})` },
           { value: "vehiculos", label: `Vehículos (${totalVehiculos})` },
         ]}
       />
@@ -344,7 +346,7 @@ function PorteriaDashboard({ perfil }: { perfil?: Perfil | null }) {
             </h4>
             <p className="text-xs text-neutral-500 dark:text-neutral-400 leading-relaxed">
               {busqueda
-                ? `No existe ningún atleta, familiar o vehículo registrado con el término "${busqueda}". Verifica el documento o placa.`
+                ? `No existe ningún ${t("participante").toLowerCase()}, ${t("visitante").toLowerCase()} o vehículo registrado con el término "${busqueda}". Verifica el documento o placa.`
                 : "No hay registros disponibles en esta categoría."}
             </p>
             {busqueda && (
@@ -367,7 +369,7 @@ function PorteriaDashboard({ perfil }: { perfil?: Perfil | null }) {
                 <div>
                   <p className="font-black text-base sm:text-lg uppercase tracking-wide leading-tight">
                     {unicoRegistro.categoria_registro === "deportista"
-                      ? "DEPORTISTA ACREDITADO — INGRESO AUTORIZADO"
+                      ? `${t("Participante").toUpperCase()} ACREDITADO — INGRESO AUTORIZADO`
                       : "INGRESO AUTORIZADO"}
                   </p>
                   <p className="text-xs text-emerald-100 leading-tight mt-0.5">
@@ -377,7 +379,7 @@ function PorteriaDashboard({ perfil }: { perfil?: Perfil | null }) {
               </div>
 
               <span className="self-start sm:self-auto px-3 py-1 rounded-xl bg-white/20 text-xs font-bold uppercase tracking-wider">
-                {unicoRegistro.categoria_registro === "deportista" ? "Atleta Oficial" : unicoRegistro.estado}
+                {unicoRegistro.categoria_registro === "deportista" ? `${t("Participante")} Oficial` : unicoRegistro.estado}
               </span>
             </div>
 
@@ -386,7 +388,7 @@ function PorteriaDashboard({ perfil }: { perfil?: Perfil | null }) {
               {/* Columna 1: Identidad */}
               <div className="p-4 rounded-2xl bg-neutral-50 dark:bg-neutral-800/40 border border-neutral-200/60 dark:border-neutral-800 space-y-1">
                 <p className="text-[10px] font-bold uppercase tracking-wider text-neutral-400">
-                  {unicoRegistro.categoria_registro === "deportista" ? "Atleta / Cadete" : "Acompañante"}
+                  {unicoRegistro.categoria_registro === "deportista" ? t("Participante") : t("Visitante")}
                 </p>
                 <h4 className="text-lg font-black text-neutral-900 dark:text-white leading-snug">
                   {unicoRegistro.nombre}
@@ -399,7 +401,7 @@ function PorteriaDashboard({ perfil }: { perfil?: Perfil | null }) {
               {/* Columna 2: Escuela o Responsable */}
               <div className="p-4 rounded-2xl bg-neutral-50 dark:bg-neutral-800/40 border border-neutral-200/60 dark:border-neutral-800 space-y-1">
                 <p className="text-[10px] font-bold uppercase tracking-wider text-neutral-400">
-                  {unicoRegistro.categoria_registro === "deportista" ? "Institución Militar" : "Deportista Responsable"}
+                  {unicoRegistro.categoria_registro === "deportista" ? t("Entidad") : `${t("Participante")} Responsable`}
                 </p>
                 <h5 className="text-sm font-bold text-neutral-900 dark:text-white leading-snug">
                   {unicoRegistro.categoria_registro === "deportista"
@@ -408,7 +410,7 @@ function PorteriaDashboard({ perfil }: { perfil?: Perfil | null }) {
                 </h5>
                 <p className="text-xs text-neutral-500">
                   {unicoRegistro.categoria_registro === "deportista"
-                    ? "XXX Juegos Interescuelas 2026"
+                    ? marca.nombre_actividad
                     : `C.C. ${unicoRegistro.deportista_cedula} • ${unicoRegistro.escuela_nombre}`}
                 </p>
               </div>
@@ -447,7 +449,7 @@ function PorteriaDashboard({ perfil }: { perfil?: Perfil | null }) {
                   <div className="flex items-center gap-2">
                     <Users className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                     <h5 className="text-xs font-bold uppercase tracking-wider text-neutral-600 dark:text-neutral-300">
-                      Familiares y Amigos Registrados ({unicoRegistro.visitantes_asociados?.length || 0})
+                      {t("Visitantes")} Registrados ({unicoRegistro.visitantes_asociados?.length || 0})
                     </h5>
                   </div>
                   {unicoRegistro.visitantes_asociados && unicoRegistro.visitantes_asociados.length > 0 && (
@@ -459,7 +461,7 @@ function PorteriaDashboard({ perfil }: { perfil?: Perfil | null }) {
 
                 {!unicoRegistro.visitantes_asociados || unicoRegistro.visitantes_asociados.length === 0 ? (
                   <div className="p-3.5 rounded-2xl bg-neutral-50 dark:bg-neutral-800/40 text-neutral-400 text-xs text-center border border-dashed border-neutral-200 dark:border-neutral-700">
-                    Este atleta no cuenta con familiares ni amigos registrados para ingreso.
+                    Este {t("participante").toLowerCase()} no cuenta con {t("visitantes").toLowerCase()} registrados para ingreso.
                   </div>
                 ) : (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
@@ -526,7 +528,7 @@ function PorteriaDashboard({ perfil }: { perfil?: Perfil | null }) {
                   <tr className="border-b border-neutral-200/70 dark:border-neutral-800 bg-neutral-50/70 dark:bg-neutral-800/40 text-[11px] font-bold uppercase tracking-wider text-neutral-400 select-none">
                     <th className="py-3 px-4">Tipo</th>
                     <th className="py-3 px-4">Nombre e Identificación</th>
-                    <th className="py-3 px-4 hidden md:table-cell">Escuela / Atleta</th>
+                    <th className="py-3 px-4 hidden md:table-cell">{t("Entidad")} / {t("Participante")}</th>
                     <th className="py-3 px-4 hidden sm:table-cell">Vehículo</th>
                     <th className="py-3 px-4 text-center">Estado</th>
                     <th className="py-3 px-4 text-right">Acción</th>
@@ -549,12 +551,12 @@ function PorteriaDashboard({ perfil }: { perfil?: Perfil | null }) {
                           {esAtleta ? (
                             <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-blue-50 dark:bg-blue-950/50 text-[#0A2540] dark:text-blue-300 text-[11px] font-bold">
                               <Trophy className="w-3 h-3 text-amber-500" />
-                              <span>Atleta</span>
+                              <span>{t("Participante")}</span>
                             </span>
                           ) : (
                             <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/50 text-emerald-800 dark:text-emerald-300 text-[11px] font-bold">
                               <Users className="w-3 h-3" />
-                              <span>Familiar</span>
+                              <span>{t("Visitante")}</span>
                             </span>
                           )}
                         </td>
@@ -707,8 +709,8 @@ function PorteriaDashboard({ perfil }: { perfil?: Perfil | null }) {
         onClose={() => setRegistroSeleccionado(null)}
         title={
           registroSeleccionado?.categoria_registro === "deportista"
-            ? "Ficha Oficial de Atleta Acreditado"
-            : "Ficha de Acompañante y Vehículo"
+            ? `Ficha Oficial de ${t("Participante")} Acreditado`
+            : `Ficha de ${t("Visitante")} y Vehículo`
         }
         maxWidth="md"
       >
@@ -723,10 +725,10 @@ function PorteriaDashboard({ perfil }: { perfil?: Perfil | null }) {
                     <CheckCircle2 className="w-5 h-5 shrink-0 text-emerald-100" />
                     <div className="truncate">
                       <p className="font-black text-xs sm:text-sm uppercase tracking-wide leading-tight">
-                        DEPORTISTA OFICIAL ACREDITADO
+                        {t("Participante").toUpperCase()} OFICIAL ACREDITADO
                       </p>
                       <p className="text-[10px] text-emerald-100/90 truncate leading-tight">
-                        XXX Juegos Interescuelas 2026 • Ingreso Autorizado
+                        {marca.nombre_actividad} • Ingreso Autorizado
                       </p>
                     </div>
                   </div>
@@ -738,7 +740,7 @@ function PorteriaDashboard({ perfil }: { perfil?: Perfil | null }) {
                 {/* 2. Tarjeta Resumen: Identidad, Institución y Contacto */}
                 <div className="p-3.5 rounded-2xl bg-neutral-50 dark:bg-neutral-800/50 border border-neutral-200/70 dark:border-neutral-800 grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
                   <div>
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-400">Atleta / Cadete</span>
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-400">{t("Participante")}</span>
                     <h4 className="text-sm font-black text-neutral-900 dark:text-white leading-snug">
                       {registroSeleccionado.nombre}
                     </h4>
@@ -748,7 +750,7 @@ function PorteriaDashboard({ perfil }: { perfil?: Perfil | null }) {
                   </div>
 
                   <div>
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-400">Institución Militar</span>
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-400">{t("Entidad")}</span>
                     <p className="font-bold text-neutral-800 dark:text-neutral-200 truncate leading-snug">
                       {registroSeleccionado.escuela_nombre}
                     </p>
@@ -769,7 +771,7 @@ function PorteriaDashboard({ perfil }: { perfil?: Perfil | null }) {
                   <div className="px-3.5 py-2 border-b border-neutral-200/60 dark:border-neutral-800 flex items-center justify-between text-xs">
                     <div className="flex items-center gap-1.5 font-bold uppercase tracking-wider text-[11px] text-neutral-600 dark:text-neutral-300">
                       <Users className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
-                      <span>Familiares y Amigos Registrados ({registroSeleccionado.visitantes_asociados?.length || 0})</span>
+                      <span>{t("Visitantes")} Registrados ({registroSeleccionado.visitantes_asociados?.length || 0})</span>
                     </div>
                     {registroSeleccionado.visitantes_asociados && registroSeleccionado.visitantes_asociados.length > 0 && (
                       <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400">
@@ -780,7 +782,7 @@ function PorteriaDashboard({ perfil }: { perfil?: Perfil | null }) {
 
                   {!registroSeleccionado.visitantes_asociados || registroSeleccionado.visitantes_asociados.length === 0 ? (
                     <div className="p-3 text-center text-xs text-neutral-400">
-                      Sin acompañantes ni familiares inscritos en el padrón para este atleta.
+                      Sin {t("visitantes").toLowerCase()} inscritos en el padrón para este {t("participante").toLowerCase()}.
                     </div>
                   ) : (
                     <div className="divide-y divide-neutral-200/60 dark:divide-neutral-800 max-h-48 overflow-y-auto no-scrollbar">
@@ -872,7 +874,7 @@ function PorteriaDashboard({ perfil }: { perfil?: Perfil | null }) {
                 {/* Datos de Identidad y Atleta Responsable */}
                 <div className="p-3.5 rounded-2xl bg-neutral-50 dark:bg-neutral-800/50 border border-neutral-200/70 dark:border-neutral-800 grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
                   <div>
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-400">Acompañante</span>
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-400">{t("Visitante")}</span>
                     <h4 className="text-sm font-black text-neutral-900 dark:text-white leading-snug">
                       {registroSeleccionado.nombre}
                     </h4>
@@ -885,7 +887,7 @@ function PorteriaDashboard({ perfil }: { perfil?: Perfil | null }) {
                   </div>
 
                   <div>
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-400">Atleta Responsable</span>
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-400">{t("Participante")} Responsable</span>
                     <p className="font-bold text-neutral-800 dark:text-neutral-200 leading-snug">
                       {registroSeleccionado.deportista_nombre}
                     </p>
