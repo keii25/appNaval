@@ -56,6 +56,14 @@ function LoginForm() {
         return;
       }
 
+      // Guardar perfil en almacenamiento local para navegación instantánea sin parpadeo
+      if (data.perfil) {
+        try {
+          localStorage.setItem("naval_perfil", JSON.stringify(data.perfil));
+          localStorage.setItem("naval_user_role", data.perfil.rol);
+        } catch {}
+      }
+
       // Redirección informada por el backend según rol y estado del perfil
       router.push(data.redireccion || "/auxiliar");
       router.refresh();

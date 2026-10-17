@@ -92,6 +92,10 @@ export function AdaptiveLayout({
 
   const handleLogout = async () => {
     try {
+      if (typeof window !== "undefined") {
+        localStorage.removeItem("naval_user_role");
+        localStorage.removeItem("naval_perfil");
+      }
       await fetch("/api/auth/logout", { method: "POST" });
     } finally {
       window.location.href = "/login";
