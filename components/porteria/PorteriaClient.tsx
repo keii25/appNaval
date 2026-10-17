@@ -361,25 +361,53 @@ function PorteriaDashboard({ perfil }: { perfil?: Perfil | null }) {
           </div>
         ) : esCoincidenciaUnica && unicoRegistro ? (
           /* ─── MODO SPOTLIGHT HERO: COINCIDENCIA ÚNICA DE ALTO IMPACTO ─── */
-          <div className="p-5 sm:p-6 rounded-3xl bg-white dark:bg-[#1C1C1E] border-2 border-emerald-500/80 shadow-lg space-y-4">
+          <div
+            className={`p-5 sm:p-6 rounded-3xl bg-white dark:bg-[#1C1C1E] border-2 shadow-lg space-y-4 ${
+              unicoRegistro.estado === "Aprobado"
+                ? "border-emerald-500/80"
+                : unicoRegistro.estado === "Rechazado"
+                ? "border-rose-500/80"
+                : "border-amber-500/80"
+            }`}
+          >
             {/* Banner de Estado Hero */}
-            <div className="p-4 rounded-2xl bg-emerald-600 text-white flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-sm">
+            <div
+              className={`p-4 rounded-2xl text-white flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-sm ${
+                unicoRegistro.estado === "Aprobado"
+                  ? "bg-emerald-600"
+                  : unicoRegistro.estado === "Rechazado"
+                  ? "bg-rose-600"
+                  : "bg-amber-500"
+              }`}
+            >
               <div className="flex items-center gap-3">
-                <CheckCircle2 className="w-8 h-8 shrink-0 text-emerald-100" />
+                {unicoRegistro.estado === "Aprobado" ? (
+                  <CheckCircle2 className="w-8 h-8 shrink-0 text-emerald-100" />
+                ) : unicoRegistro.estado === "Rechazado" ? (
+                  <XCircle className="w-8 h-8 shrink-0 text-rose-100" />
+                ) : (
+                  <Clock className="w-8 h-8 shrink-0 text-amber-100" />
+                )}
                 <div>
                   <p className="font-black text-base sm:text-lg uppercase tracking-wide leading-tight">
                     {unicoRegistro.categoria_registro === "deportista"
                       ? `${t("Participante").toUpperCase()} ACREDITADO — INGRESO AUTORIZADO`
-                      : "INGRESO AUTORIZADO"}
+                      : unicoRegistro.estado === "Aprobado"
+                      ? "INGRESO AUTORIZADO"
+                      : unicoRegistro.estado === "Rechazado"
+                      ? "ACCESO DENEGADO"
+                      : "ACCESO PENDIENTE DE VALIDACIÓN"}
                   </p>
-                  <p className="text-xs text-emerald-100 leading-tight mt-0.5">
+                  <p className="text-xs text-white/90 leading-tight mt-0.5">
                     {unicoRegistro.motivo_estado}
                   </p>
                 </div>
               </div>
 
               <span className="self-start sm:self-auto px-3 py-1 rounded-xl bg-white/20 text-xs font-bold uppercase tracking-wider">
-                {unicoRegistro.categoria_registro === "deportista" ? `${t("Participante")} Oficial` : unicoRegistro.estado}
+                {unicoRegistro.categoria_registro === "deportista"
+                  ? `${t("Participante")} Oficial`
+                  : unicoRegistro.estado}
               </span>
             </div>
 
@@ -454,7 +482,7 @@ function PorteriaDashboard({ perfil }: { perfil?: Perfil | null }) {
                   </div>
                   {unicoRegistro.visitantes_asociados && unicoRegistro.visitantes_asociados.length > 0 && (
                     <span className="text-[11px] font-semibold text-neutral-500">
-                      {unicoRegistro.visitantes_asociados.filter((v) => v.acceso_autorizado).length} Autorizados
+                      {unicoRegistro.visitantes_asociados.filter((v) => v.estado === "Aprobado").length} Aprobados
                     </span>
                   )}
                 </div>
@@ -493,7 +521,7 @@ function PorteriaDashboard({ perfil }: { perfil?: Perfil | null }) {
                         <div className="text-right shrink-0">
                           <span
                             className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                              vis.acceso_autorizado
+                              vis.estado === "Aprobado"
                                 ? "bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300"
                                 : vis.estado === "Rechazado"
                                 ? "bg-rose-100 dark:bg-rose-950/60 text-rose-800 dark:text-rose-300"
@@ -502,14 +530,14 @@ function PorteriaDashboard({ perfil }: { perfil?: Perfil | null }) {
                           >
                             <span
                               className={`w-1.5 h-1.5 rounded-full ${
-                                vis.acceso_autorizado
+                                vis.estado === "Aprobado"
                                   ? "bg-emerald-500"
                                   : vis.estado === "Rechazado"
                                   ? "bg-rose-500"
                                   : "bg-amber-500"
                               }`}
                             />
-                            <span>{vis.acceso_autorizado ? "Autorizado" : vis.estado === "Rechazado" ? "Denegado" : "Pendiente"}</span>
+                            <span>{vis.estado === "Aprobado" ? "Aprobado" : vis.estado === "Rechazado" ? "Denegado" : "Pendiente"}</span>
                           </span>
                         </div>
                       </div>
@@ -537,7 +565,7 @@ function PorteriaDashboard({ perfil }: { perfil?: Perfil | null }) {
                 <tbody className="divide-y divide-neutral-100 dark:divide-neutral-800/60">
                   {registrosPaginados.map((item) => {
                     const esAtleta = item.categoria_registro === "deportista";
-                    const esAutorizado = item.acceso_autorizado;
+                    const esAprobado = item.estado === "Aprobado";
                     const esRechazado = item.estado === "Rechazado";
 
                     return (
@@ -602,10 +630,10 @@ function PorteriaDashboard({ perfil }: { perfil?: Perfil | null }) {
 
                         {/* Semáforo Pill Badge */}
                         <td className="py-3 px-4 text-center whitespace-nowrap">
-                          {esAutorizado ? (
+                          {esAprobado ? (
                             <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 font-bold text-[11px]">
                               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                              <span>Autorizado</span>
+                              <span>Aprobado</span>
                             </span>
                           ) : esRechazado ? (
                             <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-rose-100 dark:bg-rose-950/60 text-rose-800 dark:text-rose-300 font-bold text-[11px]">
@@ -775,7 +803,7 @@ function PorteriaDashboard({ perfil }: { perfil?: Perfil | null }) {
                     </div>
                     {registroSeleccionado.visitantes_asociados && registroSeleccionado.visitantes_asociados.length > 0 && (
                       <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400">
-                        {registroSeleccionado.visitantes_asociados.filter((v) => v.acceso_autorizado).length} Autorizados
+                        {registroSeleccionado.visitantes_asociados.filter((v) => v.estado === "Aprobado").length} Aprobados
                       </span>
                     )}
                   </div>
@@ -811,7 +839,7 @@ function PorteriaDashboard({ perfil }: { perfil?: Perfil | null }) {
                           <div className="shrink-0">
                             <span
                               className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                                vis.acceso_autorizado
+                                vis.estado === "Aprobado"
                                   ? "bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300"
                                   : vis.estado === "Rechazado"
                                   ? "bg-rose-100 dark:bg-rose-950/60 text-rose-800 dark:text-rose-300"
@@ -820,14 +848,14 @@ function PorteriaDashboard({ perfil }: { perfil?: Perfil | null }) {
                             >
                               <span
                                 className={`w-1.5 h-1.5 rounded-full ${
-                                  vis.acceso_autorizado
+                                  vis.estado === "Aprobado"
                                     ? "bg-emerald-500 animate-pulse"
                                     : vis.estado === "Rechazado"
                                     ? "bg-rose-500"
                                     : "bg-amber-500"
                                 }`}
                               />
-                              <span>{vis.acceso_autorizado ? "Autorizado" : vis.estado === "Rechazado" ? "Denegado" : "Pendiente"}</span>
+                              <span>{vis.estado === "Aprobado" ? "Aprobado" : vis.estado === "Rechazado" ? "Denegado" : "Pendiente"}</span>
                             </span>
                           </div>
                         </div>
@@ -842,7 +870,7 @@ function PorteriaDashboard({ perfil }: { perfil?: Perfil | null }) {
                 {/* Banner de Estado */}
                 <div
                   className={`px-3.5 py-2.5 rounded-2xl flex items-center justify-between text-white ${
-                    registroSeleccionado.acceso_autorizado
+                    registroSeleccionado.estado === "Aprobado"
                       ? "bg-emerald-600"
                       : registroSeleccionado.estado === "Rechazado"
                       ? "bg-rose-600"
@@ -850,16 +878,20 @@ function PorteriaDashboard({ perfil }: { perfil?: Perfil | null }) {
                   }`}
                 >
                   <div className="flex items-center gap-2 min-w-0">
-                    {registroSeleccionado.acceso_autorizado ? (
+                    {registroSeleccionado.estado === "Aprobado" ? (
                       <CheckCircle2 className="w-5 h-5 shrink-0" />
+                    ) : registroSeleccionado.estado === "Rechazado" ? (
+                      <XCircle className="w-5 h-5 shrink-0" />
                     ) : (
                       <AlertTriangle className="w-5 h-5 shrink-0" />
                     )}
                     <div className="truncate">
                       <p className="font-black text-xs sm:text-sm uppercase tracking-wide leading-tight">
-                        {registroSeleccionado.acceso_autorizado
+                        {registroSeleccionado.estado === "Aprobado"
                           ? "INGRESO AUTORIZADO"
-                          : "ACCESO DENEGADO / PENDIENTE"}
+                          : registroSeleccionado.estado === "Rechazado"
+                          ? "ACCESO DENEGADO"
+                          : "ACCESO PENDIENTE DE VALIDACIÓN"}
                       </p>
                       <p className="text-[10px] opacity-90 truncate leading-tight">
                         {registroSeleccionado.motivo_estado}

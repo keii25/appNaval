@@ -124,21 +124,22 @@ export async function GET(request: NextRequest) {
 
       const fechaValida = hoy >= v.fecha_desde && hoy <= v.fecha_hasta;
       const esAprobado = v.estado === "Aprobado";
-      const accesoAutorizado = esAprobado && fechaValida;
+      const esRechazado = v.estado === "Rechazado";
+      const accesoAutorizado = esAprobado;
 
       let motivoEstado = "";
       if (v.estado === "Pendiente") {
         motivoEstado = "Pendiente de validación de seguridad";
-      } else if (v.estado === "Rechazado") {
+      } else if (esRechazado) {
         motivoEstado = "Ingreso DENEGADO por el Comando de Seguridad";
-      } else if (!fechaValida) {
-        if (hoy < v.fecha_desde) {
-          motivoEstado = `Ingreso anticipado: Válido a partir del ${v.fecha_desde}`;
-        } else {
-          motivoEstado = `Vigencia expirada: Caducó el ${v.fecha_hasta}`;
-        }
       } else {
-        motivoEstado = "Autorización vigente y habilitada";
+        if (!fechaValida && hoy < v.fecha_desde) {
+          motivoEstado = `Acreditación oficial aprobada (Válido a partir del ${v.fecha_desde})`;
+        } else if (!fechaValida && hoy > v.fecha_hasta) {
+          motivoEstado = `Acreditación oficial finalizada el ${v.fecha_hasta}`;
+        } else {
+          motivoEstado = "Autorización vigente y habilitada para ingreso";
+        }
       }
 
       return {
@@ -176,17 +177,20 @@ export async function GET(request: NextRequest) {
       const visitantesAsociados = visitantesList.map((vis: any) => {
         const fechaValidaVis = hoy >= vis.fecha_desde && hoy <= vis.fecha_hasta;
         const esAprobadoVis = vis.estado === "Aprobado";
-        const accesoAutorizadoVis = esAprobadoVis && fechaValidaVis;
+        const esRechazadoVis = vis.estado === "Rechazado";
+        const accesoAutorizadoVis = esAprobadoVis;
 
         let motivoVis = "";
         if (vis.estado === "Pendiente") {
           motivoVis = "Pendiente de validación de seguridad";
-        } else if (vis.estado === "Rechazado") {
+        } else if (esRechazadoVis) {
           motivoVis = "Ingreso DENEGADO";
-        } else if (!fechaValidaVis) {
-          motivoVis = `Fuera de vigencia (${vis.fecha_desde} al ${vis.fecha_hasta})`;
+        } else if (!fechaValidaVis && hoy < vis.fecha_desde) {
+          motivoVis = `Acreditado (A partir del ${vis.fecha_desde})`;
+        } else if (!fechaValidaVis && hoy > vis.fecha_hasta) {
+          motivoVis = `Finalizado el ${vis.fecha_hasta}`;
         } else {
-          motivoVis = "Autorizado";
+          motivoVis = "Autorizado para ingreso";
         }
 
         return {
