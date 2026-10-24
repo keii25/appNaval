@@ -70,7 +70,8 @@ export async function GET(request: NextRequest) {
               nombre
             )
           )
-        `
+        `,
+          { count: "exact" }
         )
         .order("creado_en", { ascending: false }),
 
@@ -102,7 +103,8 @@ export async function GET(request: NextRequest) {
             fecha_hasta,
             estado
           )
-        `
+        `,
+          { count: "exact" }
         )
         .order("creado_en", { ascending: false }),
     ]);
@@ -263,16 +265,23 @@ export async function GET(request: NextRequest) {
           escNom.includes(term)
         );
       });
-    } else {
-      // Si no hay filtro, mostrar los últimos 50 registros
-      resultados = resultados.slice(0, 50);
     }
+
+    const totalVisitantes = visitantesRes.count ?? listaVisitantes.length;
+    const totalDeportistas = deportistasRes.count ?? listaDeportistas.length;
+    const totalVehiculos = (visitantesRes.data || []).filter((v: any) => Boolean(v.tiene_vehiculo)).length;
 
     return NextResponse.json({
       ok: true,
       fecha_consulta: hoy,
+      stats: {
+        total_visitantes: totalVisitantes,
+        total_deportistas: totalDeportistas,
+        total_vehiculos: totalVehiculos,
+      },
       resultados,
       total: resultados.length,
+      total_encontrados: resultados.length,
     });
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : "Error del servidor.";

@@ -72,6 +72,12 @@ export interface PorteriaRegistro {
   visitantes_asociados?: VisitanteAsociado[];
 }
 
+interface PorteriaStats {
+  total_deportistas: number;
+  total_visitantes: number;
+  total_vehiculos: number;
+}
+
 type FiltroTipo = "todos" | "deportistas" | "visitantes" | "vehiculos";
 
 function PorteriaDashboard({ perfil }: { perfil?: Perfil | null }) {
@@ -80,6 +86,7 @@ function PorteriaDashboard({ perfil }: { perfil?: Perfil | null }) {
 
   const [busqueda, setBusqueda] = useState("");
   const [todosLosRegistros, setTodosLosRegistros] = useState<PorteriaRegistro[]>([]);
+  const [stats, setStats] = useState<PorteriaStats | null>(null);
   const [cargando, setCargando] = useState(false);
   const [buscado, setBuscado] = useState(false);
   const [fechaHoy, setFechaHoy] = useState("");
@@ -104,6 +111,9 @@ function PorteriaDashboard({ perfil }: { perfil?: Perfil | null }) {
 
         if (res.ok && data.ok) {
           setTodosLosRegistros(data.resultados || []);
+          if (data.stats) {
+            setStats(data.stats);
+          }
           setFechaHoy(data.fecha_consulta || "");
           setBuscado(true);
           setPaginaActual(1);
@@ -149,18 +159,18 @@ function PorteriaDashboard({ perfil }: { perfil?: Perfil | null }) {
     });
   }, [todosLosRegistros, filtroTipo]);
 
-  // Métricas rápidas
+  // Métricas rápidas (Totales Generales de la Escuela Naval)
   const totalAtletas = useMemo(
-    () => todosLosRegistros.filter((r) => r.categoria_registro === "deportista").length,
-    [todosLosRegistros]
+    () => (stats ? stats.total_deportistas : todosLosRegistros.filter((r) => r.categoria_registro === "deportista").length),
+    [stats, todosLosRegistros]
   );
   const totalAcompanantes = useMemo(
-    () => todosLosRegistros.filter((r) => r.categoria_registro === "visitante").length,
-    [todosLosRegistros]
+    () => (stats ? stats.total_visitantes : todosLosRegistros.filter((r) => r.categoria_registro === "visitante").length),
+    [stats, todosLosRegistros]
   );
   const totalVehiculos = useMemo(
-    () => todosLosRegistros.filter((r) => r.tiene_vehiculo && r.placa).length,
-    [todosLosRegistros]
+    () => (stats ? stats.total_vehiculos : todosLosRegistros.filter((r) => r.tiene_vehiculo && r.placa).length),
+    [stats, todosLosRegistros]
   );
 
   // Cálculos de Paginación
@@ -288,10 +298,30 @@ function PorteriaDashboard({ perfil }: { perfil?: Perfil | null }) {
           setPaginaActual(1);
         }}
         options={[
-          { value: "todos", label: `Todos (${todosLosRegistros.length})` },
-          { value: "deportistas", label: `${t("Participantes")} (${totalAtletas})` },
-          { value: "visitantes", label: `${t("Visitantes")} (${totalAcompanantes})` },
-          { value: "vehiculos", label: `Vehículos (${totalVehiculos})` },
+          {
+            value: "todos",
+            label: busqueda.trim()
+              ? `Todos (${todosLosRegistros.length})`
+              : `Todos (${stats ? stats.total_deportistas + stats.total_visitantes : todosLosRegistros.length})`,
+          },
+          {
+            value: "deportistas",
+            label: busqueda.trim()
+              ? `${t("Participantes")} (${todosLosRegistros.filter((r) => r.categoria_registro === "deportista").length})`
+              : `${t("Participantes")} (${totalAtletas})`,
+          },
+          {
+            value: "visitantes",
+            label: busqueda.trim()
+              ? `${t("Visitantes")} (${todosLosRegistros.filter((r) => r.categoria_registro === "visitante").length})`
+              : `${t("Visitantes")} (${totalAcompanantes})`,
+          },
+          {
+            value: "vehiculos",
+            label: busqueda.trim()
+              ? `Vehículos (${todosLosRegistros.filter((r) => r.tiene_vehiculo && r.placa).length})`
+              : `Vehículos (${totalVehiculos})`,
+          },
         ]}
       />
 

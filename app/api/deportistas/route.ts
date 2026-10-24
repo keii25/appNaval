@@ -60,9 +60,10 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const busqueda = searchParams.get("q")?.trim() || "";
     const escuelaId = searchParams.get("escuela_id")?.trim();
-    const limit = Math.min(Number(searchParams.get("limit")) || 50, 200);
+    const hasLimit = searchParams.has("limit");
+    const limit = hasLimit ? Math.min(Number(searchParams.get("limit")) || 50, 1000) : null;
     const page = Math.max(Number(searchParams.get("page")) || 1, 1);
-    const offset = (page - 1) * limit;
+    const offset = (page - 1) * (limit || 0);
 
     const supabaseAdmin = createAdminClient();
 
@@ -87,8 +88,11 @@ export async function GET(request: NextRequest) {
       `,
         { count: "exact" }
       )
-      .order("creado_en", { ascending: false })
-      .range(offset, offset + limit - 1);
+      .order("creado_en", { ascending: false });
+
+    if (hasLimit && limit !== null) {
+      query = query.range(offset, offset + limit - 1);
+    }
 
     // Filtro por escuela
     if (escuelaId) {

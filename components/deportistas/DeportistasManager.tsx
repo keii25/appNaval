@@ -60,6 +60,7 @@ export function DeportistasManager({
   const { marca, t } = useLabels();
 
   const [deportistas, setDeportistas] = useState<DeportistaItem[]>([]);
+  const [totalDeportistasBd, setTotalDeportistasBd] = useState<number | null>(null);
   const [escuelas, setEscuelas] = useState<EscuelaOption[]>([]);
   const [cargando, setCargando] = useState(true);
 
@@ -121,6 +122,9 @@ export function DeportistasManager({
 
       if (res.ok && data.ok) {
         setDeportistas(data.deportistas || []);
+        if (typeof data.total === "number") {
+          setTotalDeportistasBd(data.total);
+        }
       } else {
         toast.error("Error", data.error || `No se pudieron cargar ${t("los", "participante", true)}.`);
       }
@@ -264,7 +268,9 @@ export function DeportistasManager({
     }
   };
 
-  const totalDeportistas = deportistas.length;
+  const totalDeportistas = busqueda.trim() || filtroEscuela
+    ? deportistas.length
+    : (totalDeportistasBd ?? deportistas.length);
   const totalVisitantes = deportistas.reduce((sum, d) => sum + (d.visitantes_count || 0), 0);
 
   // Cálculos de paginación oficial (máximo 10 deportistas por vista)

@@ -217,7 +217,7 @@ export function TabVisitantes() {
         {/* Total */}
         <div className="p-4 rounded-3xl bg-white dark:bg-[#1C1C1E] border border-neutral-200/70 dark:border-neutral-800/80 shadow-sm flex flex-col justify-between">
           <div className="flex items-center justify-between text-neutral-400">
-            <span className="text-[11px] font-bold uppercase tracking-wider">Total</span>
+            <span className="text-[11px] font-bold uppercase tracking-wider">Total {t("Visitantes")}</span>
             <Users className="w-4 h-4 text-[#0A2540] dark:text-blue-400" />
           </div>
           <p className="text-2xl sm:text-3xl font-black text-neutral-900 dark:text-white mt-2">
