@@ -10,7 +10,7 @@ const PUBLIC_ROUTES = ["/login", "/api/auth", "/design-system"];
 const ROLE_MAP: Record<string, Rol[]> = {
   "/admin": ["admin"],
   "/auxiliar": ["auxiliar", "admin"],
-  "/porteria": ["porteria", "admin"],
+  "/porteria": ["porteria", "admin", "auxiliar"],
 };
 
 export async function middleware(request: NextRequest) {

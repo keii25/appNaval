@@ -22,6 +22,7 @@ import {
   RefreshCw,
   FileText,
   Shield,
+  ShieldCheck,
   CheckCircle2,
   ChevronLeft,
   ChevronRight,
@@ -282,47 +283,50 @@ export function DeportistasManager({
 
   return (
     <div className="space-y-6">
-      {/* ─── TARJETAS DE ESTADÍSTICAS RÁPIDAS ─── */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
-        <div className="p-4 rounded-3xl bg-white dark:bg-[#1C1C1E] border border-neutral-200/70 dark:border-neutral-800/80 shadow-sm flex items-center justify-between">
-          <div>
-            <span className="text-[11px] font-semibold uppercase tracking-wider text-neutral-400">
-              {t("Participantes")} Registrados
+      {/* ─── TARJETAS DE ESTADÍSTICAS RÁPIDAS (COMPACTAS EN MÓVIL) ─── */}
+      <div className="grid grid-cols-3 gap-2 sm:gap-4">
+        {/* Card 1: Participantes */}
+        <div className="p-2.5 sm:p-4 rounded-2xl sm:rounded-3xl bg-white dark:bg-[#1C1C1E] border border-neutral-200/70 dark:border-neutral-800/80 shadow-xs sm:shadow-sm flex items-center justify-between gap-1.5 sm:gap-2">
+          <div className="min-w-0 flex-1">
+            <span className="text-[9px] sm:text-[11px] font-semibold uppercase tracking-wider text-neutral-400 block truncate">
+              {t("Participantes")}
             </span>
-            <p className="text-2xl font-black text-neutral-900 dark:text-white mt-1">
+            <p className="text-base sm:text-2xl font-black text-neutral-900 dark:text-white mt-0.5 sm:mt-1 leading-tight truncate">
               {totalDeportistas}
             </p>
           </div>
-          <div className="w-10 h-10 rounded-2xl bg-blue-50 dark:bg-blue-950/40 text-[#0A2540] dark:text-blue-400 flex items-center justify-center">
-            <Users className="w-5 h-5" />
+          <div className="w-7 h-7 sm:w-10 sm:h-10 rounded-xl sm:rounded-2xl bg-blue-50 dark:bg-blue-950/40 text-[#0A2540] dark:text-blue-400 flex items-center justify-center shrink-0">
+            <Users className="w-3.5 h-3.5 sm:w-5 sm:h-5" />
           </div>
         </div>
 
-        <div className="p-4 rounded-3xl bg-white dark:bg-[#1C1C1E] border border-neutral-200/70 dark:border-neutral-800/80 shadow-sm flex items-center justify-between">
-          <div>
-            <span className="text-[11px] font-semibold uppercase tracking-wider text-neutral-400">
-              {t("Entidades")} Participantes
+        {/* Card 2: Entidades */}
+        <div className="p-2.5 sm:p-4 rounded-2xl sm:rounded-3xl bg-white dark:bg-[#1C1C1E] border border-neutral-200/70 dark:border-neutral-800/80 shadow-xs sm:shadow-sm flex items-center justify-between gap-1.5 sm:gap-2">
+          <div className="min-w-0 flex-1">
+            <span className="text-[9px] sm:text-[11px] font-semibold uppercase tracking-wider text-neutral-400 block truncate">
+              {t("Entidades")}
             </span>
-            <p className="text-2xl font-black text-neutral-900 dark:text-white mt-1">
+            <p className="text-base sm:text-2xl font-black text-neutral-900 dark:text-white mt-0.5 sm:mt-1 leading-tight truncate">
               {escuelas.length}
             </p>
           </div>
-          <div className="w-10 h-10 rounded-2xl bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 flex items-center justify-center">
-            <School className="w-5 h-5" />
+          <div className="w-7 h-7 sm:w-10 sm:h-10 rounded-xl sm:rounded-2xl bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 flex items-center justify-center shrink-0">
+            <School className="w-3.5 h-3.5 sm:w-5 sm:h-5" />
           </div>
         </div>
 
-        <div className="p-4 rounded-3xl bg-white dark:bg-[#1C1C1E] border border-neutral-200/70 dark:border-neutral-800/80 shadow-sm flex items-center justify-between">
-          <div>
-            <span className="text-[11px] font-semibold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
-              {t("Visitantes")} Vinculados
+        {/* Card 3: Visitantes */}
+        <div className="p-2.5 sm:p-4 rounded-2xl sm:rounded-3xl bg-white dark:bg-[#1C1C1E] border border-neutral-200/70 dark:border-neutral-800/80 shadow-xs sm:shadow-sm flex items-center justify-between gap-1.5 sm:gap-2">
+          <div className="min-w-0 flex-1">
+            <span className="text-[9px] sm:text-[11px] font-semibold uppercase tracking-wider text-emerald-600 dark:text-emerald-400 block truncate">
+              {t("Visitantes")}
             </span>
-            <p className="text-2xl font-black text-emerald-600 dark:text-emerald-400 mt-1">
+            <p className="text-base sm:text-2xl font-black text-emerald-600 dark:text-emerald-400 mt-0.5 sm:mt-1 leading-tight truncate">
               {totalVisitantes}
             </p>
           </div>
-          <div className="w-10 h-10 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
-            <UserPlus className="w-5 h-5" />
+          <div className="w-7 h-7 sm:w-10 sm:h-10 rounded-xl sm:rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
+            <UserPlus className="w-3.5 h-3.5 sm:w-5 sm:h-5" />
           </div>
         </div>
       </div>
@@ -377,8 +381,8 @@ export function DeportistasManager({
       </div>
 
       {/* ─── LISTADO INSET GROUPED APPLE HIG ─── */}
-      <div className="rounded-3xl bg-white dark:bg-[#1C1C1E] border border-neutral-200/70 dark:border-neutral-800/80 shadow-sm overflow-hidden">
-        <div className="p-4 sm:p-5 border-b border-neutral-100 dark:border-neutral-800 flex items-center justify-between">
+      <div className="space-y-3">
+        <div className="p-4 sm:p-5 rounded-3xl bg-white dark:bg-[#1C1C1E] border border-neutral-200/70 dark:border-neutral-800/80 shadow-xs flex items-center justify-between">
           <div>
             <h3 className="text-base font-bold text-neutral-900 dark:text-white">
               Padrón Oficial de {t("Participantes")}
@@ -400,12 +404,12 @@ export function DeportistasManager({
         </div>
 
         {cargando ? (
-          <div className="p-10 text-center text-neutral-400 text-sm">
+          <div className="p-10 text-center text-neutral-400 text-sm rounded-3xl bg-white dark:bg-[#1C1C1E] border border-neutral-200/70 dark:border-neutral-800/80 shadow-xs">
             <RefreshCw className="w-6 h-6 animate-spin mx-auto mb-2 text-[#0A2540] dark:text-blue-400" />
             Consultando registros...
           </div>
         ) : deportistas.length === 0 ? (
-          <div className="p-10 text-center">
+          <div className="p-10 text-center rounded-3xl bg-white dark:bg-[#1C1C1E] border border-neutral-200/70 dark:border-neutral-800/80 shadow-xs">
             <Users className="w-10 h-10 text-neutral-300 dark:text-neutral-600 mx-auto mb-2" />
             <p className="text-sm font-semibold text-neutral-700 dark:text-neutral-300">
               No se encontraron {t("participantes")}
@@ -417,50 +421,46 @@ export function DeportistasManager({
             </p>
           </div>
         ) : (
-          <div className="divide-y divide-neutral-100 dark:divide-neutral-800/80">
+          <div className="space-y-3">
             {deportistasPaginados.map((d) => {
               const tieneVisitantes = d.visitantes_count > 0;
 
               return (
                 <div
                   key={d.id}
-                  className="p-4 sm:p-5 flex flex-col lg:flex-row lg:items-center justify-between gap-4 hover:bg-neutral-50/60 dark:hover:bg-neutral-800/40 transition-colors"
+                  className="p-4 sm:p-5 rounded-3xl bg-white dark:bg-[#1C1C1E] border border-neutral-200/70 dark:border-neutral-800/80 shadow-xs flex flex-col lg:flex-row lg:items-center justify-between gap-4 hover:border-neutral-300 dark:hover:border-neutral-700 hover:shadow-sm transition-all"
                 >
                   <div className="flex items-start gap-3.5 min-w-0 flex-1">
                     <div className="w-11 h-11 rounded-2xl bg-blue-50 dark:bg-blue-950/40 text-[#0A2540] dark:text-blue-400 font-bold text-sm shrink-0 flex items-center justify-center">
                       <Users className="w-5 h-5" />
                     </div>
 
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2 flex-wrap">
+                    <div className="min-w-0 flex-1 space-y-1.5 sm:space-y-2">
+                      <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
                         <h4 className="text-sm sm:text-base font-bold text-neutral-900 dark:text-white truncate">
                           {d.nombre_completo}
                         </h4>
-                        <span className="text-xs font-mono font-bold px-2 py-0.5 rounded-full bg-neutral-100 dark:bg-neutral-800 text-neutral-800 dark:text-neutral-200">
+                        <span className="text-xs font-mono font-bold px-2 py-0.5 rounded-md bg-neutral-100 dark:bg-neutral-800 text-neutral-800 dark:text-neutral-200">
                           CC {d.cedula}
                         </span>
-                        <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-blue-50 text-[#0A2540] dark:bg-blue-950/60 dark:text-blue-300 truncate max-w-xs">
+                        <span className="text-[11px] font-semibold px-2.5 py-0.5 rounded-md bg-blue-50 text-[#0A2540] dark:bg-blue-950/60 dark:text-blue-300 truncate max-w-xs">
                           {d.escuela_nombre}
                         </span>
                       </div>
 
-                      <div className="flex items-center gap-3 mt-1.5 text-xs text-neutral-500 dark:text-neutral-400 flex-wrap">
-                        <span className="flex items-center gap-1 font-mono">
-                          <Phone className="w-3.5 h-3.5 text-neutral-400" />
+                      <div className="flex items-center gap-1.5 sm:gap-2 pt-0.5 text-xs text-neutral-500 dark:text-neutral-400 flex-wrap">
+                        <span className="inline-flex items-center gap-1 font-mono px-2 py-0.5 rounded-md bg-neutral-100/80 dark:bg-neutral-800/70 text-neutral-700 dark:text-neutral-300">
+                          <Phone className="w-3 h-3 text-neutral-400 dark:text-neutral-500 shrink-0" />
                           {d.celular}
                         </span>
-                        <span>•</span>
-                        <span className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-medium">
-                          <CheckCircle2 className="w-3.5 h-3.5" />
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 font-medium">
+                          <CheckCircle2 className="w-3 h-3 text-emerald-600 dark:text-emerald-400 shrink-0" />
                           Ley 1581 Autorizada
                         </span>
                         {d.observaciones && (
-                          <>
-                            <span>•</span>
-                            <span className="italic truncate max-w-sm">
-                              &quot;{d.observaciones}&quot;
-                            </span>
-                          </>
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-neutral-100/60 dark:bg-neutral-800/40 text-neutral-600 dark:text-neutral-400 italic truncate max-w-xs sm:max-w-sm">
+                            &quot;{d.observaciones}&quot;
+                          </span>
                         )}
                       </div>
                     </div>
@@ -477,6 +477,16 @@ export function DeportistasManager({
                       <span>
                         {t("Visitantes")} ({d.visitantes_count})
                       </span>
+                    </Link>
+
+                    {/* Botón Acceso e Historial en Portería */}
+                    <Link
+                      href={`/porteria?q=${d.cedula}`}
+                      className="min-h-[40px] px-3 py-1.5 rounded-xl bg-blue-50 hover:bg-blue-100/80 dark:bg-blue-950/40 dark:hover:bg-blue-900/60 text-[#0A2540] dark:text-blue-300 text-xs font-semibold inline-flex items-center justify-center gap-1.5 transition-all active:scale-95"
+                      title={`Control de Acceso e Historial de ${d.nombre_completo}`}
+                    >
+                      <ShieldCheck className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400 shrink-0" />
+                      <span className="hidden sm:inline">Acceso</span>
                     </Link>
 
                     {/* Botón Editar */}
@@ -516,7 +526,7 @@ export function DeportistasManager({
 
         {/* ─── BARRA DE PAGINACIÓN APPLE HIG (MÁXIMO 10 POR VISTA) ─── */}
         {deportistas.length > 0 && (
-          <div className="p-4 sm:p-5 border-t border-neutral-100 dark:border-neutral-800 flex flex-col sm:flex-row items-center justify-between gap-4 bg-neutral-50/50 dark:bg-neutral-900/30">
+          <div className="p-4 sm:p-5 rounded-3xl bg-white dark:bg-[#1C1C1E] border border-neutral-200/70 dark:border-neutral-800/80 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="text-xs text-neutral-500 dark:text-neutral-400 text-center sm:text-left">
               Mostrando <strong className="text-neutral-900 dark:text-white font-bold">{inicioIndice + 1}</strong> a{" "}
               <strong className="text-neutral-900 dark:text-white font-bold">{Math.min(finIndice, deportistas.length)}</strong> de{" "}
