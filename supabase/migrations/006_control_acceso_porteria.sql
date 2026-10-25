@@ -29,8 +29,8 @@ ALTER TYPE public.accion_auditoria ADD VALUE IF NOT EXISTS 'REGISTRO_SALIDA';
 CREATE TABLE IF NOT EXISTS public.registros_acceso (
     id             UUID               PRIMARY KEY DEFAULT gen_random_uuid(),
     tipo_sujeto    tipo_sujeto_acceso NOT NULL,
-    deportista_id  UUID               REFERENCES public.deportistas(id) ON DELETE RESTRICT,
-    visitante_id   UUID               REFERENCES public.visitantes(id) ON DELETE RESTRICT,
+    deportista_id  UUID               REFERENCES public.deportistas(id) ON DELETE CASCADE,
+    visitante_id   UUID               REFERENCES public.visitantes(id) ON DELETE CASCADE,
     tipo_evento    tipo_evento_acceso NOT NULL,
     creado_en      TIMESTAMPTZ        NOT NULL DEFAULT timezone('America/Bogota', now()),
     operador_id    UUID               NOT NULL REFERENCES public.perfiles(id) ON DELETE RESTRICT,

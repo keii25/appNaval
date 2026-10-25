@@ -244,6 +244,16 @@ export async function DELETE(_request: NextRequest, { params }: RouteParams) {
       }
     }
 
+    // 2.5 Limpiar registros de acceso en portería asociados al visitante
+    const { error: histErr } = await supabaseAdmin
+      .from("registros_acceso")
+      .delete()
+      .eq("visitante_id", id);
+
+    if (histErr) {
+      console.warn("Advertencia al limpiar registros de acceso del visitante:", histErr.message);
+    }
+
     // 3. Eliminar registro
     const { error: delError } = await supabaseAdmin
       .from("visitantes")
