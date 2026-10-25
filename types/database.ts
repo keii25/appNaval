@@ -22,7 +22,13 @@ export type AccionAuditoria =
   | "ELIMINAR_DEPORTISTA"
   | "CREAR_ESCUELA"
   | "EDITAR_ESCUELA"
-  | "GESTIONAR_AUXILIAR";
+  | "GESTIONAR_AUXILIAR"
+  | "REGISTRO_INGRESO"
+  | "REGISTRO_SALIDA";
+
+export type TipoEventoAcceso = "INGRESO" | "SALIDA";
+export type TipoSujetoAcceso = "DEPORTISTA" | "VISITANTE";
+export type EstadoPresencia = "DENTRO" | "FUERA" | "SIN_REGISTRO";
 
 // ─── TABLAS OFICIALES ────────────────────────────────────────
 
@@ -91,10 +97,24 @@ export interface Auditoria {
   id: string;
   usuario_id: string;
   accion: AccionAuditoria;
-  entidad?: string | null;       // "DEPORTISTA" | "VISITANTE" | "ESCUELA" | "AUXILIAR" | "CONFIGURACION"
+  entidad?: string | null;       // "DEPORTISTA" | "VISITANTE" | "ESCUELA" | "AUXILIAR" | "CONFIGURACION" | "ACCESO"
   entidad_id?: string | null;    // ID del registro afectado
   detalle: Record<string, unknown>;
   fecha: string;
+}
+
+export interface RegistroAcceso {
+  id: string;
+  tipo_sujeto: TipoSujetoAcceso;
+  deportista_id?: string | null;
+  visitante_id?: string | null;
+  tipo_evento: TipoEventoAcceso;
+  creado_en: string;
+  operador_id: string;
+  observaciones?: string | null;
+  operador?: Perfil;
+  deportista?: Deportista;
+  visitante?: Visitante;
 }
 
 // ─── VISTAS / JOINS ──────────────────────────────────────────

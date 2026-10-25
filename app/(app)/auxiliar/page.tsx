@@ -13,7 +13,7 @@ function AuxiliarDashboard() {
   const { t } = useLabels();
 
   return (
-    <div className="space-y-6 pb-20">
+    <div className="space-y-5 sm:space-y-6 pb-8 sm:pb-12">
       <LargeTitleHeader
         title={`Registro de ${t("Participantes")}`}
         subtitle={`Mesa de acreditación, validación de identidad y registro de ${t("visitantes")} autorizados.`}

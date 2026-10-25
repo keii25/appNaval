@@ -17,7 +17,7 @@ export function LargeTitleHeader({
   accessory,
 }: LargeTitleHeaderProps) {
   return (
-    <div className="pt-1 sm:pt-2 pb-3 sm:pb-5 border-b border-neutral-200/60 dark:border-neutral-800/60 min-w-0 flex-1 w-full">
+    <div className="px-1 sm:px-0 pt-1 sm:pt-2 pb-3 sm:pb-5 border-b border-neutral-200/60 dark:border-neutral-800/60 min-w-0 flex-1 w-full">
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3 min-w-0">
         <div className="min-w-0">
           <h1 className="text-xl sm:text-4xl font-extrabold tracking-tight text-neutral-900 dark:text-white leading-tight break-words">

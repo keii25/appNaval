@@ -2,6 +2,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { EstadoPresencia } from "@/types/database";
+import {
+  formatearFechaVigencia,
+  evaluarVigenciaVisitante,
+  formatearTimestampAuditoria,
+} from "@/lib/fechas";
 
 export const dynamic = "force-dynamic";
 
@@ -116,6 +122,36 @@ export async function GET(request: NextRequest) {
       console.error("Error consultando deportistas en portería:", deportistasRes.error);
     }
 
+    // 3. Consultar últimos registros de acceso para determinar estado de presencia en tiempo real
+    const { data: eventosAcceso } = await supabaseAdmin
+      .from("registros_acceso")
+      .select("id, tipo_sujeto, deportista_id, visitante_id, tipo_evento, creado_en")
+      .order("creado_en", { ascending: false });
+
+    const ultimoEstadoDeportista: Record<string, any> = {};
+    const ultimoEstadoVisitante: Record<string, any> = {};
+
+    if (Array.isArray(eventosAcceso)) {
+      for (const ev of eventosAcceso) {
+        if (ev.deportista_id && !ultimoEstadoDeportista[ev.deportista_id]) {
+          ultimoEstadoDeportista[ev.deportista_id] = {
+            id: ev.id,
+            tipo_evento: ev.tipo_evento,
+            creado_en: ev.creado_en,
+            timestamp_formateado: formatearTimestampAuditoria(ev.creado_en),
+          };
+        }
+        if (ev.visitante_id && !ultimoEstadoVisitante[ev.visitante_id]) {
+          ultimoEstadoVisitante[ev.visitante_id] = {
+            id: ev.id,
+            tipo_evento: ev.tipo_evento,
+            creado_en: ev.creado_en,
+            timestamp_formateado: formatearTimestampAuditoria(ev.creado_en),
+          };
+        }
+      }
+    }
+
     const hoy = new Date().toISOString().split("T")[0];
 
     // 1. Mapear visitantes / acompañantes y vehículos
@@ -124,25 +160,28 @@ export async function GET(request: NextRequest) {
       const esc = dep?.escuela;
       const escuelaObj = Array.isArray(esc) ? esc[0] : esc;
 
-      const fechaValida = hoy >= v.fecha_desde && hoy <= v.fecha_hasta;
+      const evaluacion = evaluarVigenciaVisitante(v.fecha_desde, v.fecha_hasta);
+      const fechaValida = evaluacion.enRango;
       const esAprobado = v.estado === "Aprobado";
       const esRechazado = v.estado === "Rechazado";
-      const accesoAutorizado = esAprobado;
+      const accesoAutorizado = esAprobado && fechaValida;
 
       let motivoEstado = "";
       if (v.estado === "Pendiente") {
         motivoEstado = "Pendiente de validación de seguridad";
       } else if (esRechazado) {
         motivoEstado = "Ingreso DENEGADO por el Comando de Seguridad";
+      } else if (evaluacion.esPrematuro) {
+        motivoEstado = `Acreditación oficial aprobada (Válido a partir del ${formatearFechaVigencia(v.fecha_desde)})`;
+      } else if (evaluacion.esVencido) {
+        motivoEstado = "Acceso Vencido / No Autorizado";
       } else {
-        if (!fechaValida && hoy < v.fecha_desde) {
-          motivoEstado = `Acreditación oficial aprobada (Válido a partir del ${v.fecha_desde})`;
-        } else if (!fechaValida && hoy > v.fecha_hasta) {
-          motivoEstado = `Acreditación oficial finalizada el ${v.fecha_hasta}`;
-        } else {
-          motivoEstado = "Autorización vigente y habilitada para ingreso";
-        }
+        motivoEstado = "Autorización vigente y habilitada para ingreso";
       }
+
+      const ultEv = ultimoEstadoVisitante[v.id] || null;
+      // Por defecto el estado de presencia es SIN_REGISTRO
+      const estadoPresencia: EstadoPresencia = !ultEv ? "SIN_REGISTRO" : ultEv.tipo_evento === "SALIDA" ? "FUERA" : "DENTRO";
 
       return {
         id: v.id,
@@ -157,10 +196,15 @@ export async function GET(request: NextRequest) {
         modelo: v.modelo,
         fecha_desde: v.fecha_desde,
         fecha_hasta: v.fecha_hasta,
+        fecha_desde_formateada: formatearFechaVigencia(v.fecha_desde),
+        fecha_hasta_formateada: formatearFechaVigencia(v.fecha_hasta),
         estado: v.estado,
         acceso_autorizado: accesoAutorizado,
         fecha_valida_hoy: fechaValida,
+        alerta_vigencia: evaluacion.esVencido || evaluacion.esPrematuro ? (evaluacion.mensajeAlerta || "Acceso Vencido / No Autorizado") : null,
         motivo_estado: motivoEstado,
+        estado_presencia: estadoPresencia,
+        ultimo_evento: ultEv,
         deportista_nombre: dep?.nombre_completo || "—",
         deportista_cedula: dep?.cedula || "—",
         deportista_celular: dep?.celular || "—",
@@ -177,23 +221,27 @@ export async function GET(request: NextRequest) {
       const totalVis = visitantesList.length;
 
       const visitantesAsociados = visitantesList.map((vis: any) => {
-        const fechaValidaVis = hoy >= vis.fecha_desde && hoy <= vis.fecha_hasta;
+        const evaluacionVis = evaluarVigenciaVisitante(vis.fecha_desde, vis.fecha_hasta);
+        const fechaValidaVis = evaluacionVis.enRango;
         const esAprobadoVis = vis.estado === "Aprobado";
         const esRechazadoVis = vis.estado === "Rechazado";
-        const accesoAutorizadoVis = esAprobadoVis;
+        const accesoAutorizadoVis = esAprobadoVis && fechaValidaVis;
 
         let motivoVis = "";
         if (vis.estado === "Pendiente") {
           motivoVis = "Pendiente de validación de seguridad";
         } else if (esRechazadoVis) {
           motivoVis = "Ingreso DENEGADO";
-        } else if (!fechaValidaVis && hoy < vis.fecha_desde) {
-          motivoVis = `Acreditado (A partir del ${vis.fecha_desde})`;
-        } else if (!fechaValidaVis && hoy > vis.fecha_hasta) {
-          motivoVis = `Finalizado el ${vis.fecha_hasta}`;
+        } else if (evaluacionVis.esPrematuro) {
+          motivoVis = `Acreditado (A partir del ${formatearFechaVigencia(vis.fecha_desde)})`;
+        } else if (evaluacionVis.esVencido) {
+          motivoVis = "Acceso Vencido / No Autorizado";
         } else {
           motivoVis = "Autorizado para ingreso";
         }
+
+        const ultEvVis = ultimoEstadoVisitante[vis.id] || null;
+        const estadoPresenciaVis: EstadoPresencia = !ultEvVis ? "SIN_REGISTRO" : ultEvVis.tipo_evento === "SALIDA" ? "FUERA" : "DENTRO";
 
         return {
           id: vis.id,
@@ -206,11 +254,19 @@ export async function GET(request: NextRequest) {
           modelo: vis.modelo,
           fecha_desde: vis.fecha_desde,
           fecha_hasta: vis.fecha_hasta,
+          fecha_desde_formateada: formatearFechaVigencia(vis.fecha_desde),
+          fecha_hasta_formateada: formatearFechaVigencia(vis.fecha_hasta),
           estado: vis.estado,
           acceso_autorizado: accesoAutorizadoVis,
+          alerta_vigencia: evaluacionVis.esVencido || evaluacionVis.esPrematuro ? (evaluacionVis.mensajeAlerta || "Acceso Vencido / No Autorizado") : null,
           motivo_estado: motivoVis,
+          estado_presencia: estadoPresenciaVis,
+          ultimo_evento: ultEvVis,
         };
       });
+
+      const ultEvDep = ultimoEstadoDeportista[dep.id] || null;
+      const estadoPresenciaDep: EstadoPresencia = !ultEvDep ? "SIN_REGISTRO" : ultEvDep.tipo_evento === "SALIDA" ? "FUERA" : "DENTRO";
 
       return {
         id: dep.id,
@@ -225,10 +281,15 @@ export async function GET(request: NextRequest) {
         modelo: null,
         fecha_desde: hoy,
         fecha_hasta: "2026-12-31",
+        fecha_desde_formateada: formatearFechaVigencia(hoy),
+        fecha_hasta_formateada: formatearFechaVigencia("2026-12-31"),
         estado: "Aprobado" as const,
         acceso_autorizado: true,
         fecha_valida_hoy: true,
+        alerta_vigencia: null,
         motivo_estado: "Acreditación deportiva oficial - XXX Juegos Interescuelas 2026",
+        estado_presencia: estadoPresenciaDep,
+        ultimo_evento: ultEvDep,
         deportista_nombre: dep.nombre_completo,
         deportista_cedula: dep.cedula,
         deportista_celular: dep.celular || "—",
