@@ -291,6 +291,16 @@ export async function DELETE(
       );
     }
 
+    // 2.5 Limpiar registros de acceso en portería asociados al deportista
+    const { error: histErr } = await supabaseAdmin
+      .from("registros_acceso")
+      .delete()
+      .eq("deportista_id", id);
+
+    if (histErr) {
+      console.warn("Advertencia al limpiar registros de acceso del deportista:", histErr.message);
+    }
+
     // 3. Proceder a eliminar
     const { error: delErr } = await supabaseAdmin
       .from("deportistas")
