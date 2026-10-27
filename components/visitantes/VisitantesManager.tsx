@@ -69,6 +69,7 @@ export function VisitantesManager({
   const [nuevoParentesco, setNuevoParentesco] = useState<Parentesco>("Familiar");
   const [nuevoTipoDoc, setNuevoTipoDoc] = useState<TipoDocumento>("CC");
   const [nuevoNumeroDoc, setNuevoNumeroDoc] = useState("");
+  const [nuevoNumeroEscarapela, setNuevoNumeroEscarapela] = useState("");
   const [nuevoTieneVehiculo, setNuevoTieneVehiculo] = useState(false);
   const [nuevaPlaca, setNuevaPlaca] = useState("");
   const [nuevoModelo, setNuevoModelo] = useState("");
@@ -87,6 +88,7 @@ export function VisitantesManager({
   const [editParentesco, setEditParentesco] = useState<Parentesco>("Familiar");
   const [editTipoDoc, setEditTipoDoc] = useState<TipoDocumento>("CC");
   const [editNumeroDoc, setEditNumeroDoc] = useState("");
+  const [editNumeroEscarapela, setEditNumeroEscarapela] = useState("");
   const [editTieneVehiculo, setEditTieneVehiculo] = useState(false);
   const [editPlaca, setEditPlaca] = useState("");
   const [editModelo, setEditModelo] = useState("");
@@ -172,6 +174,7 @@ export function VisitantesManager({
           parentesco: nuevoParentesco,
           tipo_documento: nuevoTipoDoc,
           numero_documento: nuevoNumeroDoc.trim(),
+          numero_escarapela: nuevoNumeroEscarapela.trim() || null,
           tiene_vehiculo: nuevoTieneVehiculo,
           placa: nuevoTieneVehiculo ? nuevaPlaca.trim().toUpperCase() : null,
           modelo: nuevoTieneVehiculo ? nuevoModelo.trim() : null,
@@ -189,6 +192,7 @@ export function VisitantesManager({
         // Reset campos
         setNuevoNombre("");
         setNuevoNumeroDoc("");
+        setNuevoNumeroEscarapela("");
         setNuevoTieneVehiculo(false);
         setNuevaPlaca("");
         setNuevoModelo("");
@@ -210,6 +214,7 @@ export function VisitantesManager({
     setEditParentesco(v.parentesco);
     setEditTipoDoc(v.tipo_documento);
     setEditNumeroDoc(v.numero_documento);
+    setEditNumeroEscarapela(v.numero_escarapela || "");
     setEditTieneVehiculo(Boolean(v.tiene_vehiculo));
     setEditPlaca(v.placa || "");
     setEditModelo(v.modelo || "");
@@ -232,6 +237,7 @@ export function VisitantesManager({
           parentesco: editParentesco,
           tipo_documento: editTipoDoc,
           numero_documento: editNumeroDoc.trim(),
+          numero_escarapela: editNumeroEscarapela.trim() || null,
           tiene_vehiculo: editTieneVehiculo,
           placa: editTieneVehiculo ? editPlaca.trim().toUpperCase() : null,
           modelo: editTieneVehiculo ? editModelo.trim() : null,
@@ -466,6 +472,11 @@ export function VisitantesManager({
                         <span className="text-xs font-mono font-bold px-2 py-0.5 rounded-full bg-neutral-100 dark:bg-neutral-800 text-neutral-800 dark:text-neutral-200">
                           {v.tipo_documento} {v.numero_documento}
                         </span>
+                        {v.numero_escarapela && (
+                          <span className="text-xs font-mono font-bold px-2 py-0.5 rounded-full bg-amber-50 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border border-amber-200/80 dark:border-amber-800/60">
+                            Escarapela #{v.numero_escarapela}
+                          </span>
+                        )}
                         <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-blue-50 text-[#0A2540] dark:bg-blue-950/60 dark:text-blue-300">
                           {v.parentesco}
                         </span>
@@ -577,7 +588,7 @@ export function VisitantesManager({
             autoFocus
           />
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="block text-xs font-bold uppercase tracking-wider text-neutral-500 mb-1.5">
                 Parentesco *
@@ -607,16 +618,25 @@ export function VisitantesManager({
                 <option value="Pasaporte">Pasaporte</option>
               </select>
             </div>
+          </div>
 
-            <div>
-              <Input
-                label="Número de Documento *"
-                value={nuevoNumeroDoc}
-                onChange={(e) => setNuevoNumeroDoc(e.target.value)}
-                placeholder="Ej: 1045678901"
-                required
-              />
-            </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <Input
+              label="Número de Documento *"
+              value={nuevoNumeroDoc}
+              onChange={(e) => setNuevoNumeroDoc(e.target.value)}
+              placeholder="Ej: 1045678901"
+              required
+            />
+
+            <Input
+              label="Número de Escarapela (Opcional)"
+              value={nuevoNumeroEscarapela}
+              onChange={(e) => setNuevoNumeroEscarapela(e.target.value.replace(/[^0-9]/g, ""))}
+              placeholder="Ej: 001, 002 (Acepta ceros iniciales)"
+              inputMode="numeric"
+              maxLength={20}
+            />
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -727,7 +747,7 @@ export function VisitantesManager({
             autoFocus
           />
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="block text-xs font-bold uppercase tracking-wider text-neutral-500 mb-1.5">
                 Parentesco *
@@ -757,15 +777,24 @@ export function VisitantesManager({
                 <option value="Pasaporte">Pasaporte</option>
               </select>
             </div>
+          </div>
 
-            <div>
-              <Input
-                label="Número de Documento *"
-                value={editNumeroDoc}
-                onChange={(e) => setEditNumeroDoc(e.target.value)}
-                required
-              />
-            </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <Input
+              label="Número de Documento *"
+              value={editNumeroDoc}
+              onChange={(e) => setEditNumeroDoc(e.target.value)}
+              required
+            />
+
+            <Input
+              label="Número de Escarapela (Opcional)"
+              value={editNumeroEscarapela}
+              onChange={(e) => setEditNumeroEscarapela(e.target.value.replace(/[^0-9]/g, ""))}
+              placeholder="Ej: 001, 002..."
+              inputMode="numeric"
+              maxLength={20}
+            />
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">

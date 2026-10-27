@@ -19,6 +19,14 @@ export const deportistaSchema = z.object({
   escuela_id: z
     .string()
     .uuid("Debe seleccionar una institución militar/policial válida."),
+  numero_escarapela: z
+    .string()
+    .trim()
+    .regex(/^[0-9]*$/, "El número de escarapela debe contener únicamente números.")
+    .max(20, "El número de escarapela no puede superar los 20 caracteres.")
+    .nullable()
+    .optional()
+    .or(z.literal("")),
   observaciones: z
     .string()
     .trim()
@@ -55,6 +63,14 @@ export const editarDeportistaSchema = z.object({
     .string()
     .uuid("Debe seleccionar una institución válida.")
     .optional(),
+  numero_escarapela: z
+    .string()
+    .trim()
+    .regex(/^[0-9]*$/, "El número de escarapela debe contener únicamente números.")
+    .max(20, "El número de escarapela no puede superar los 20 caracteres.")
+    .nullable()
+    .optional()
+    .or(z.literal("")),
   observaciones: z
     .string()
     .trim()

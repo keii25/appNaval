@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { deportistaSchema } from "@/lib/validations/deportista";
+import { validarEscarapelaUnica } from "@/lib/validations/escarapela";
 
 export const dynamic = "force-dynamic";
 
@@ -76,6 +77,7 @@ export async function GET(request: NextRequest) {
         cedula,
         celular,
         escuela_id,
+        numero_escarapela,
         observaciones,
         autorizacion_datos,
         creado_en,
@@ -168,6 +170,7 @@ export async function POST(request: NextRequest) {
       cedula,
       celular,
       escuela_id,
+      numero_escarapela,
       observaciones,
       autorizacion_datos,
     } = parsed.data;
@@ -213,7 +216,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 3. Insertar el registro del deportista
+    // 3. Validar unicidad de escarapela si se proporcionó
+    if (numero_escarapela) {
+      const valEscarapela = await validarEscarapelaUnica(supabaseAdmin, numero_escarapela);
+      if (!valEscarapela.esValido) {
+        return NextResponse.json({ error: valEscarapela.mensajeError }, { status: 409 });
+      }
+    }
+
+    // 4. Insertar el registro del deportista
     const { data: nuevoDeportista, error: insertError } = await supabaseAdmin
       .from("deportistas")
       .insert({
@@ -221,6 +232,7 @@ export async function POST(request: NextRequest) {
         cedula,
         celular,
         escuela_id,
+        numero_escarapela: numero_escarapela?.trim() || null,
         observaciones: observaciones || null,
         autorizacion_datos: true,
         autorizado_por: authCheck.user.id,
@@ -233,6 +245,7 @@ export async function POST(request: NextRequest) {
         cedula,
         celular,
         escuela_id,
+        numero_escarapela,
         observaciones,
         autorizacion_datos,
         creado_en

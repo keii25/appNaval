@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { visitanteSchema } from "@/lib/validations/visitante";
+import { validarEscarapelaUnica } from "@/lib/validations/escarapela";
 
 export const dynamic = "force-dynamic";
 
@@ -243,6 +244,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       parentesco,
       tipo_documento,
       numero_documento,
+      numero_escarapela,
       tiene_vehiculo,
       placa,
       modelo,
@@ -267,7 +269,15 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       );
     }
 
-    // 6. Insertar visitante
+    // 6. Validar unicidad de escarapela si se proporcionó
+    if (numero_escarapela) {
+      const valEscarapela = await validarEscarapelaUnica(supabaseAdmin, numero_escarapela);
+      if (!valEscarapela.esValido) {
+        return NextResponse.json({ error: valEscarapela.mensajeError }, { status: 409 });
+      }
+    }
+
+    // 7. Insertar visitante
     const { data: nuevoVisitante, error: insertError } = await supabaseAdmin
       .from("visitantes")
       .insert({
@@ -276,6 +286,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
         parentesco,
         tipo_documento,
         numero_documento,
+        numero_escarapela: numero_escarapela?.trim() || null,
         tiene_vehiculo: Boolean(tiene_vehiculo),
         placa: tiene_vehiculo ? placa : null,
         modelo: tiene_vehiculo ? modelo : null,

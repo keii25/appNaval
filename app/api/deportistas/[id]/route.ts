@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { editarDeportistaSchema } from "@/lib/validations/deportista";
+import { validarEscarapelaUnica } from "@/lib/validations/escarapela";
 
 export const dynamic = "force-dynamic";
 
@@ -68,6 +69,7 @@ export async function GET(
         cedula,
         celular,
         escuela_id,
+        numero_escarapela,
         observaciones,
         autorizacion_datos,
         creado_en,
@@ -97,6 +99,7 @@ export async function GET(
         escuela_id: d.escuela_id,
         escuela_nombre: d.escuela?.nombre || "Sin escuela",
         escuela_activa: d.escuela?.activa ?? true,
+        numero_escarapela: d.numero_escarapela || null,
         observaciones: d.observaciones,
         autorizacion_datos: d.autorizacion_datos,
         creado_en: d.creado_en,
@@ -131,7 +134,7 @@ export async function PATCH(
       );
     }
 
-    const { nombre_completo, cedula, celular, escuela_id, observaciones } = parsed.data;
+    const { nombre_completo, cedula, celular, escuela_id, numero_escarapela, observaciones } = parsed.data;
     const supabaseAdmin = createAdminClient();
 
     // 1. Obtener registro previo
@@ -184,11 +187,22 @@ export async function PATCH(
       }
     }
 
+    // 4. Si se especifica número de escarapela, validar que no esté asignada a otro sujeto
+    if (numero_escarapela) {
+      const valEscarapela = await validarEscarapelaUnica(supabaseAdmin, numero_escarapela, {
+        excludeDeportistaId: id,
+      });
+      if (!valEscarapela.esValido) {
+        return NextResponse.json({ error: valEscarapela.mensajeError }, { status: 409 });
+      }
+    }
+
     const updates: Record<string, unknown> = {};
     if (nombre_completo !== undefined) updates.nombre_completo = nombre_completo;
     if (cedula !== undefined) updates.cedula = cedula;
     if (celular !== undefined) updates.celular = celular;
     if (escuela_id !== undefined) updates.escuela_id = escuela_id;
+    if (numero_escarapela !== undefined) updates.numero_escarapela = numero_escarapela?.trim() || null;
     if (observaciones !== undefined) updates.observaciones = observaciones;
 
     const { data: deportistaActualizado, error: updateErr } = await supabaseAdmin
@@ -202,6 +216,7 @@ export async function PATCH(
         cedula,
         celular,
         escuela_id,
+        numero_escarapela,
         observaciones,
         autorizacion_datos,
         creado_en

@@ -47,7 +47,9 @@ export async function GET(request: NextRequest) {
     const supabaseAdmin = createAdminClient();
 
     // Consultar en paralelo tanto visitantes/acompañantes como deportistas acreditados
-    const [visitantesRes, deportistasRes] = await Promise.all([
+    // Consultar en paralelo tanto visitantes/acompañantes como deportistas acreditados
+    // Se utiliza consulta resiliente por si la columna numero_escarapela aún no ha sido aplicada en Supabase
+    let [visitantesRes, deportistasRes]: [any, any] = await Promise.all([
       supabaseAdmin
         .from("visitantes")
         .select(
@@ -58,6 +60,7 @@ export async function GET(request: NextRequest) {
           parentesco,
           tipo_documento,
           numero_documento,
+          numero_escarapela,
           tiene_vehiculo,
           placa,
           modelo,
@@ -89,6 +92,7 @@ export async function GET(request: NextRequest) {
           nombre_completo,
           cedula,
           celular,
+          numero_escarapela,
           observaciones,
           autorizacion_datos,
           creado_en,
@@ -102,6 +106,7 @@ export async function GET(request: NextRequest) {
             parentesco,
             tipo_documento,
             numero_documento,
+            numero_escarapela,
             tiene_vehiculo,
             placa,
             modelo,
@@ -114,6 +119,77 @@ export async function GET(request: NextRequest) {
         )
         .order("creado_en", { ascending: false }),
     ]);
+
+    // Si la columna numero_escarapela no existe aún en la base de datos (código 42703), reintentar sin ella
+    if (visitantesRes.error?.code === "42703" || deportistasRes.error?.code === "42703") {
+      [visitantesRes, deportistasRes] = await Promise.all([
+        supabaseAdmin
+          .from("visitantes")
+          .select(
+            `
+            id,
+            deportista_id,
+            nombre,
+            parentesco,
+            tipo_documento,
+            numero_documento,
+            tiene_vehiculo,
+            placa,
+            modelo,
+            fecha_desde,
+            fecha_hasta,
+            estado,
+            creado_en,
+            deportista:deportistas!visitantes_deportista_id_fkey (
+              id,
+              nombre_completo,
+              cedula,
+              celular,
+              escuela_id,
+              escuela:escuelas!deportistas_escuela_id_fkey (
+                id,
+                nombre
+              )
+            )
+          `,
+            { count: "exact" }
+          )
+          .order("creado_en", { ascending: false }),
+
+        supabaseAdmin
+          .from("deportistas")
+          .select(
+            `
+            id,
+            nombre_completo,
+            cedula,
+            celular,
+            observaciones,
+            autorizacion_datos,
+            creado_en,
+            escuela:escuelas!deportistas_escuela_id_fkey (
+              id,
+              nombre
+            ),
+            visitantes (
+              id,
+              nombre,
+              parentesco,
+              tipo_documento,
+              numero_documento,
+              tiene_vehiculo,
+              placa,
+              modelo,
+              fecha_desde,
+              fecha_hasta,
+              estado
+            )
+          `,
+            { count: "exact" }
+          )
+          .order("creado_en", { ascending: false }),
+      ]);
+    }
 
     if (visitantesRes.error) {
       console.error("Error consultando visitantes en portería:", visitantesRes.error);
@@ -172,9 +248,9 @@ export async function GET(request: NextRequest) {
       } else if (esRechazado) {
         motivoEstado = "Ingreso DENEGADO por el Comando de Seguridad";
       } else if (evaluacion.esPrematuro) {
-        motivoEstado = `Acreditación oficial aprobada (Válido a partir del ${formatearFechaVigencia(v.fecha_desde)})`;
+        motivoEstado = `Acreditación aprobada — Habilitada a partir del ${formatearFechaVigencia(v.fecha_desde)}`;
       } else if (evaluacion.esVencido) {
-        motivoEstado = "Acceso Vencido / No Autorizado";
+        motivoEstado = "Acreditación Vencida — Fuera del período autorizado";
       } else {
         motivoEstado = "Autorización vigente y habilitada para ingreso";
       }
@@ -191,6 +267,7 @@ export async function GET(request: NextRequest) {
         parentesco: v.parentesco,
         tipo_documento: v.tipo_documento,
         numero_documento: v.numero_documento,
+        numero_escarapela: v.numero_escarapela || null,
         tiene_vehiculo: Boolean(v.tiene_vehiculo),
         placa: v.placa,
         modelo: v.modelo,
@@ -201,7 +278,13 @@ export async function GET(request: NextRequest) {
         estado: v.estado,
         acceso_autorizado: accesoAutorizado,
         fecha_valida_hoy: fechaValida,
-        alerta_vigencia: evaluacion.esVencido || evaluacion.esPrematuro ? (evaluacion.mensajeAlerta || "Acceso Vencido / No Autorizado") : null,
+        es_prematuro: evaluacion.esPrematuro,
+        es_vencido: evaluacion.esVencido,
+        alerta_vigencia: evaluacion.esVencido
+          ? "Acreditación Vencida"
+          : evaluacion.esPrematuro
+          ? `Vigencia Próxima (Habilitada a partir de: ${formatearFechaVigencia(v.fecha_desde)})`
+          : null,
         motivo_estado: motivoEstado,
         estado_presencia: estadoPresencia,
         ultimo_evento: ultEv,
@@ -233,9 +316,9 @@ export async function GET(request: NextRequest) {
         } else if (esRechazadoVis) {
           motivoVis = "Ingreso DENEGADO";
         } else if (evaluacionVis.esPrematuro) {
-          motivoVis = `Acreditado (A partir del ${formatearFechaVigencia(vis.fecha_desde)})`;
+          motivoVis = `Acreditado — A partir del ${formatearFechaVigencia(vis.fecha_desde)}`;
         } else if (evaluacionVis.esVencido) {
-          motivoVis = "Acceso Vencido / No Autorizado";
+          motivoVis = "Acreditación Vencida";
         } else {
           motivoVis = "Autorizado para ingreso";
         }
@@ -249,6 +332,7 @@ export async function GET(request: NextRequest) {
           parentesco: vis.parentesco || "Acompañante",
           tipo_documento: vis.tipo_documento || "CC",
           numero_documento: vis.numero_documento,
+          numero_escarapela: vis.numero_escarapela || null,
           tiene_vehiculo: Boolean(vis.tiene_vehiculo),
           placa: vis.placa,
           modelo: vis.modelo,
@@ -258,7 +342,13 @@ export async function GET(request: NextRequest) {
           fecha_hasta_formateada: formatearFechaVigencia(vis.fecha_hasta),
           estado: vis.estado,
           acceso_autorizado: accesoAutorizadoVis,
-          alerta_vigencia: evaluacionVis.esVencido || evaluacionVis.esPrematuro ? (evaluacionVis.mensajeAlerta || "Acceso Vencido / No Autorizado") : null,
+          es_prematuro: evaluacionVis.esPrematuro,
+          es_vencido: evaluacionVis.esVencido,
+          alerta_vigencia: evaluacionVis.esVencido
+            ? "Acreditación Vencida"
+            : evaluacionVis.esPrematuro
+            ? `Vigencia Próxima (A partir de: ${formatearFechaVigencia(vis.fecha_desde)})`
+            : null,
           motivo_estado: motivoVis,
           estado_presencia: estadoPresenciaVis,
           ultimo_evento: ultEvVis,
@@ -276,6 +366,7 @@ export async function GET(request: NextRequest) {
         parentesco: "Atleta / Cadete Oficial",
         tipo_documento: "CC",
         numero_documento: dep.cedula,
+        numero_escarapela: dep.numero_escarapela || null,
         tiene_vehiculo: false,
         placa: null,
         modelo: null,
@@ -311,6 +402,7 @@ export async function GET(request: NextRequest) {
       const term = q.toLowerCase();
       resultados = resultados.filter((item) => {
         const numDoc = (item.numero_documento || "").toLowerCase();
+        const escNum = (item.numero_escarapela || "").toLowerCase();
         const placa = (item.placa || "").toLowerCase();
         const nom = (item.nombre || "").toLowerCase();
         const depCed = (item.deportista_cedula || "").toLowerCase();
@@ -319,6 +411,7 @@ export async function GET(request: NextRequest) {
 
         return (
           numDoc.includes(term) ||
+          escNum.includes(term) ||
           placa.includes(term) ||
           nom.includes(term) ||
           depCed.includes(term) ||

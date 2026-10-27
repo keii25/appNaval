@@ -45,6 +45,7 @@ export interface Deportista {
   cedula: string;                // Cédula única (solo números)
   celular: string;               // 10 dígitos, inicia en 3
   escuela_id: string;            // FK a escuelas(id)
+  numero_escarapela?: string | null; // Opcional, admite ceros iniciales (ej: 001, 002)
   observaciones?: string | null; // Máx. 500 caracteres
   autorizacion_datos: boolean;   // Ley 1581 de 2012
   autorizado_por?: string | null;// FK a perfiles(id) de quien marcó la casilla
@@ -60,6 +61,7 @@ export interface Visitante {
   parentesco: Parentesco;
   tipo_documento: TipoDocumento;
   numero_documento: string;
+  numero_escarapela?: string | null; // Opcional, admite ceros iniciales (ej: 001, 002)
   tiene_vehiculo: boolean;
   placa: string | null;
   modelo: string | null;
