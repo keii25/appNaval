@@ -27,6 +27,15 @@ export const visitanteSchema = z
       .max(20, "El número de documento es demasiado largo")
       .regex(/^[a-zA-Z0-9\-]+$/, "El número de documento contiene caracteres inválidos"),
 
+    numero_escarapela: z
+      .string()
+      .trim()
+      .regex(/^[0-9]*$/, "El número de escarapela debe contener únicamente números.")
+      .max(20, "El número de escarapela no puede superar los 20 caracteres.")
+      .nullable()
+      .optional()
+      .or(z.literal("")),
+
     tiene_vehiculo: z.boolean(),
 
     placa: z.string().trim().toUpperCase().nullable().optional(),

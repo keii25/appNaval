@@ -36,6 +36,7 @@ export interface DeportistaItem {
   escuela_id: string;
   escuela_nombre: string;
   escuela_activa: boolean;
+  numero_escarapela?: string | null;
   observaciones: string | null;
   autorizacion_datos: boolean;
   creado_en: string;
@@ -77,6 +78,7 @@ export function DeportistasManager({
   const [nuevaCedula, setNuevaCedula] = useState("");
   const [nuevoCelular, setNuevoCelular] = useState("");
   const [nuevaEscuelaId, setNuevaEscuelaId] = useState("");
+  const [nuevoNumeroEscarapela, setNuevoNumeroEscarapela] = useState("");
   const [nuevasObservaciones, setNuevasObservaciones] = useState("");
   const [aceptoLey1581, setAceptoLey1581] = useState(false);
   const [guardandoCrear, setGuardandoCrear] = useState(false);
@@ -87,6 +89,7 @@ export function DeportistasManager({
   const [editCedula, setEditCedula] = useState("");
   const [editCelular, setEditCelular] = useState("");
   const [editEscuelaId, setEditEscuelaId] = useState("");
+  const [editNumeroEscarapela, setEditNumeroEscarapela] = useState("");
   const [editObservaciones, setEditObservaciones] = useState("");
   const [guardandoEdit, setGuardandoEdit] = useState(false);
 
@@ -172,6 +175,7 @@ export function DeportistasManager({
           cedula: nuevaCedula.trim(),
           celular: nuevoCelular.trim(),
           escuela_id: nuevaEscuelaId,
+          numero_escarapela: nuevoNumeroEscarapela.trim() || null,
           observaciones: nuevasObservaciones.trim() || null,
           autorizacion_datos: true,
         }),
@@ -185,6 +189,7 @@ export function DeportistasManager({
         setNuevoNombre("");
         setNuevaCedula("");
         setNuevoCelular("");
+        setNuevoNumeroEscarapela("");
         setNuevasObservaciones("");
         setAceptoLey1581(false);
         cargarDeportistas();
@@ -205,6 +210,7 @@ export function DeportistasManager({
     setEditCedula(d.cedula);
     setEditCelular(d.celular);
     setEditEscuelaId(d.escuela_id);
+    setEditNumeroEscarapela(d.numero_escarapela || "");
     setEditObservaciones(d.observaciones || "");
   };
 
@@ -223,6 +229,7 @@ export function DeportistasManager({
           cedula: editCedula.trim(),
           celular: editCelular.trim(),
           escuela_id: editEscuelaId,
+          numero_escarapela: editNumeroEscarapela.trim() || null,
           observaciones: editObservaciones.trim() || null,
         }),
       });
@@ -443,6 +450,11 @@ export function DeportistasManager({
                         <span className="text-xs font-mono font-bold px-2 py-0.5 rounded-md bg-neutral-100 dark:bg-neutral-800 text-neutral-800 dark:text-neutral-200">
                           CC {d.cedula}
                         </span>
+                        {d.numero_escarapela && (
+                          <span className="text-xs font-mono font-bold px-2 py-0.5 rounded-md bg-amber-50 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border border-amber-200/80 dark:border-amber-800/60">
+                            Escarapela #{d.numero_escarapela}
+                          </span>
+                        )}
                         <span className="text-[11px] font-semibold px-2.5 py-0.5 rounded-md bg-blue-50 text-[#0A2540] dark:bg-blue-950/60 dark:text-blue-300 truncate max-w-xs">
                           {d.escuela_nombre}
                         </span>
@@ -642,23 +654,34 @@ export function DeportistasManager({
             />
           </div>
 
-          <div>
-            <label className="block text-xs font-bold uppercase tracking-wider text-neutral-500 mb-1.5">
-              {t("Entidad")} *
-            </label>
-            <select
-              value={nuevaEscuelaId}
-              onChange={(e) => setNuevaEscuelaId(e.target.value)}
-              required
-              className="w-full min-h-[44px] px-3.5 py-2 rounded-2xl bg-neutral-100 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 text-sm text-neutral-900 dark:text-white font-semibold focus:outline-none focus:ring-2 focus:ring-[#0A2540]"
-            >
-              <option value="" disabled>Seleccione una {t("entidad")}...</option>
-              {escuelas.map((esc) => (
-                <option key={esc.id} value={esc.id}>
-                  {esc.nombre}
-                </option>
-              ))}
-            </select>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-bold uppercase tracking-wider text-neutral-500 mb-1.5">
+                {t("Entidad")} *
+              </label>
+              <select
+                value={nuevaEscuelaId}
+                onChange={(e) => setNuevaEscuelaId(e.target.value)}
+                required
+                className="w-full min-h-[44px] px-3.5 py-2 rounded-2xl bg-neutral-100 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 text-sm text-neutral-900 dark:text-white font-semibold focus:outline-none focus:ring-2 focus:ring-[#0A2540]"
+              >
+                <option value="" disabled>Seleccione una {t("entidad")}...</option>
+                {escuelas.map((esc) => (
+                  <option key={esc.id} value={esc.id}>
+                    {esc.nombre}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <Input
+              label="Número de Escarapela (Opcional)"
+              value={nuevoNumeroEscarapela}
+              onChange={(e) => setNuevoNumeroEscarapela(e.target.value.replace(/[^0-9]/g, ""))}
+              placeholder="Ej: 001, 002 (Acepta ceros iniciales)"
+              inputMode="numeric"
+              maxLength={20}
+            />
           </div>
 
           <div>
@@ -755,22 +778,33 @@ export function DeportistasManager({
             />
           </div>
 
-          <div>
-            <label className="block text-xs font-bold uppercase tracking-wider text-neutral-500 mb-1.5">
-              {t("Entidad")} Oficial
-            </label>
-            <select
-              value={editEscuelaId}
-              onChange={(e) => setEditEscuelaId(e.target.value)}
-              required
-              className="w-full min-h-[44px] px-3.5 py-2 rounded-2xl bg-neutral-100 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 text-sm text-neutral-900 dark:text-white font-semibold focus:outline-none focus:ring-2 focus:ring-[#0A2540]"
-            >
-              {escuelas.map((esc) => (
-                <option key={esc.id} value={esc.id}>
-                  {esc.nombre}
-                </option>
-              ))}
-            </select>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-bold uppercase tracking-wider text-neutral-500 mb-1.5">
+                {t("Entidad")} Oficial
+              </label>
+              <select
+                value={editEscuelaId}
+                onChange={(e) => setEditEscuelaId(e.target.value)}
+                required
+                className="w-full min-h-[44px] px-3.5 py-2 rounded-2xl bg-neutral-100 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 text-sm text-neutral-900 dark:text-white font-semibold focus:outline-none focus:ring-2 focus:ring-[#0A2540]"
+              >
+                {escuelas.map((esc) => (
+                  <option key={esc.id} value={esc.id}>
+                    {esc.nombre}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <Input
+              label="Número de Escarapela (Opcional)"
+              value={editNumeroEscarapela}
+              onChange={(e) => setEditNumeroEscarapela(e.target.value.replace(/[^0-9]/g, ""))}
+              placeholder="Ej: 001, 002..."
+              inputMode="numeric"
+              maxLength={20}
+            />
           </div>
 
           <div>

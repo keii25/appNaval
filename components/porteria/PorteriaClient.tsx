@@ -52,6 +52,7 @@ export interface VisitanteAsociado {
   parentesco: string;
   tipo_documento: string;
   numero_documento: string;
+  numero_escarapela?: string | null;
   tiene_vehiculo: boolean;
   placa: string | null;
   modelo: string | null;
@@ -61,6 +62,8 @@ export interface VisitanteAsociado {
   fecha_hasta_formateada?: string;
   estado: "Pendiente" | "Aprobado" | "Rechazado";
   acceso_autorizado: boolean;
+  es_prematuro?: boolean;
+  es_vencido?: boolean;
   alerta_vigencia?: string | null;
   estado_presencia?: "DENTRO" | "FUERA" | "SIN_REGISTRO";
   ultimo_evento?: EventoAccesoResumen | null;
@@ -75,6 +78,7 @@ export interface PorteriaRegistro {
   parentesco: string;
   tipo_documento: string;
   numero_documento: string;
+  numero_escarapela?: string | null;
   tiene_vehiculo: boolean;
   placa: string | null;
   modelo: string | null;
@@ -85,6 +89,8 @@ export interface PorteriaRegistro {
   estado: "Pendiente" | "Aprobado" | "Rechazado";
   acceso_autorizado: boolean;
   fecha_valida_hoy: boolean;
+  es_prematuro?: boolean;
+  es_vencido?: boolean;
   alerta_vigencia?: string | null;
   estado_presencia?: "DENTRO" | "FUERA" | "SIN_REGISTRO";
   ultimo_evento?: EventoAccesoResumen | null;
@@ -105,6 +111,7 @@ interface PorteriaStats {
 }
 
 type FiltroTipo = "todos" | "deportistas" | "visitantes" | "vehiculos";
+type FiltroPresencia = "todos" | "dentro" | "fuera" | "sin_registro";
 
 function PorteriaDashboard({ perfil }: { perfil?: Perfil | null }) {
   const toast = useToast();
@@ -117,6 +124,7 @@ function PorteriaDashboard({ perfil }: { perfil?: Perfil | null }) {
   const [buscado, setBuscado] = useState(false);
   const [fechaHoy, setFechaHoy] = useState("");
   const [filtroTipo, setFiltroTipo] = useState<FiltroTipo>("todos");
+  const [filtroPresencia, setFiltroPresencia] = useState<FiltroPresencia>("todos");
   const [errorConsulta, setErrorConsulta] = useState<string | null>(null);
 
   // Paginación compacta (10 por página)
@@ -344,18 +352,41 @@ function PorteriaDashboard({ perfil }: { perfil?: Perfil | null }) {
   const limpiarBusqueda = () => {
     setBusqueda("");
     setErrorConsulta(null);
+    setFiltroPresencia("todos");
     ejecutarBusqueda("");
   };
 
-  // Filtrado según Segmented Control
+  // Filtrado según Segmented Control y Filtro de Presencia
   const registrosFiltrados = useMemo(() => {
     return todosLosRegistros.filter((item) => {
-      if (filtroTipo === "deportistas") return item.categoria_registro === "deportista";
-      if (filtroTipo === "visitantes") return item.categoria_registro === "visitante";
-      if (filtroTipo === "vehiculos") return Boolean(item.tiene_vehiculo && item.placa);
+      // 1. Filtro por categoría
+      if (filtroTipo === "deportistas" && item.categoria_registro !== "deportista") return false;
+      if (filtroTipo === "visitantes" && item.categoria_registro !== "visitante") return false;
+      if (filtroTipo === "vehiculos" && (!item.tiene_vehiculo || !item.placa)) return false;
+
+      // 2. Filtro para validar la presencia de la persona
+      const presencia = item.estado_presencia || "SIN_REGISTRO";
+      if (filtroPresencia === "dentro" && presencia !== "DENTRO") return false;
+      if (filtroPresencia === "fuera" && presencia !== "FUERA") return false;
+      if (filtroPresencia === "sin_registro" && presencia !== "SIN_REGISTRO") return false;
+
       return true;
     });
-  }, [todosLosRegistros, filtroTipo]);
+  }, [todosLosRegistros, filtroTipo, filtroPresencia]);
+
+  // Conteo de Presencia en tiempo real
+  const totalDentro = useMemo(
+    () => todosLosRegistros.filter((r) => r.estado_presencia === "DENTRO").length,
+    [todosLosRegistros]
+  );
+  const totalFuera = useMemo(
+    () => todosLosRegistros.filter((r) => r.estado_presencia === "FUERA").length,
+    [todosLosRegistros]
+  );
+  const totalSinRegistro = useMemo(
+    () => todosLosRegistros.filter((r) => !r.estado_presencia || r.estado_presencia === "SIN_REGISTRO").length,
+    [todosLosRegistros]
+  );
 
   // Métricas rápidas (Totales Generales de la Escuela Naval)
   const totalAtletas = useMemo(
@@ -536,6 +567,99 @@ function PorteriaDashboard({ perfil }: { perfil?: Perfil | null }) {
         ]}
       />
 
+      {/* ─── FILTRO DE VALIDACIÓN DE PRESENCIA FÍSICA (REQUERIMIENTO 1) ─── */}
+      <div className="p-3 sm:p-3.5 rounded-2xl bg-white dark:bg-[#1C1C1E] border border-neutral-200/70 dark:border-neutral-800/80 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-bold uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
+            Validar Presencia:
+          </span>
+          {filtroPresencia !== "todos" && (
+            <button
+              type="button"
+              onClick={() => {
+                setFiltroPresencia("todos");
+                setPaginaActual(1);
+              }}
+              className="text-[11px] text-blue-600 dark:text-blue-400 hover:underline font-semibold"
+            >
+              (Mostrar todos)
+            </button>
+          )}
+        </div>
+
+        <div className="flex items-center gap-1.5 flex-wrap">
+          <button
+            type="button"
+            onClick={() => {
+              setFiltroPresencia("todos");
+              setPaginaActual(1);
+            }}
+            className={`min-h-[34px] px-3 py-1 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 active:scale-95 ${
+              filtroPresencia === "todos"
+                ? "bg-[#0A2540] text-white shadow-xs"
+                : "bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 hover:bg-neutral-200/80 dark:hover:bg-neutral-700"
+            }`}
+          >
+            <span>Todos</span>
+            <span className="text-[10px] opacity-80 font-mono">({todosLosRegistros.length})</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              setFiltroPresencia("dentro");
+              setPaginaActual(1);
+            }}
+            className={`min-h-[34px] px-3 py-1 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 active:scale-95 ${
+              filtroPresencia === "dentro"
+                ? "bg-emerald-600 text-white shadow-xs"
+                : "bg-emerald-50 dark:bg-emerald-950/50 text-emerald-800 dark:text-emerald-300 hover:bg-emerald-100 dark:hover:bg-emerald-950/80 border border-emerald-200 dark:border-emerald-800/60"
+            }`}
+          >
+            <span>En Base (Dentro)</span>
+            <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-black/10 dark:bg-white/10">
+              {totalDentro}
+            </span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              setFiltroPresencia("fuera");
+              setPaginaActual(1);
+            }}
+            className={`min-h-[34px] px-3 py-1 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 active:scale-95 ${
+              filtroPresencia === "fuera"
+                ? "bg-amber-600 text-white shadow-xs"
+                : "bg-amber-50 dark:bg-amber-950/50 text-amber-800 dark:text-amber-300 hover:bg-amber-100 dark:hover:bg-amber-950/80 border border-amber-200 dark:border-amber-800/60"
+            }`}
+          >
+            <span>Fuera</span>
+            <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-black/10 dark:bg-white/10">
+              {totalFuera}
+            </span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              setFiltroPresencia("sin_registro");
+              setPaginaActual(1);
+            }}
+            className={`min-h-[34px] px-3 py-1 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 active:scale-95 ${
+              filtroPresencia === "sin_registro"
+                ? "bg-neutral-600 text-white shadow-xs"
+                : "bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 hover:bg-neutral-200 dark:hover:bg-neutral-700 border border-neutral-200 dark:border-neutral-700"
+            }`}
+          >
+            <span>Sin Registro</span>
+            <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-black/10 dark:bg-white/10">
+              {totalSinRegistro}
+            </span>
+          </button>
+        </div>
+      </div>
+
       {/* ─── RESULTADOS: COINCIDENCIA ÚNICA SPOTLIGHT O LISTA COMPACTA ─── */}
       <section className="space-y-4">
         <div className="flex items-center justify-between px-1">
@@ -615,7 +739,11 @@ function PorteriaDashboard({ perfil }: { perfil?: Perfil | null }) {
             <div
               className={`p-4 rounded-2xl text-white flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-sm ${
                 unicoRegistro.estado === "Aprobado"
-                  ? "bg-emerald-600"
+                  ? unicoRegistro.es_prematuro
+                    ? "bg-blue-700"
+                    : unicoRegistro.es_vencido
+                    ? "bg-rose-700"
+                    : "bg-emerald-600"
                   : unicoRegistro.estado === "Rechazado"
                   ? "bg-rose-600"
                   : "bg-amber-500"
@@ -623,7 +751,13 @@ function PorteriaDashboard({ perfil }: { perfil?: Perfil | null }) {
             >
               <div className="flex items-center gap-3">
                 {unicoRegistro.estado === "Aprobado" ? (
-                  <CheckCircle2 className="w-8 h-8 shrink-0 text-emerald-100" />
+                  unicoRegistro.es_prematuro ? (
+                    <CalendarDays className="w-8 h-8 shrink-0 text-blue-100" />
+                  ) : unicoRegistro.es_vencido ? (
+                    <AlertTriangle className="w-8 h-8 shrink-0 text-rose-100" />
+                  ) : (
+                    <CheckCircle2 className="w-8 h-8 shrink-0 text-emerald-100" />
+                  )
                 ) : unicoRegistro.estado === "Rechazado" ? (
                   <XCircle className="w-8 h-8 shrink-0 text-rose-100" />
                 ) : (
@@ -634,7 +768,11 @@ function PorteriaDashboard({ perfil }: { perfil?: Perfil | null }) {
                     {unicoRegistro.categoria_registro === "deportista"
                       ? `${t("Participante").toUpperCase()} ACREDITADO — INGRESO AUTORIZADO`
                       : unicoRegistro.estado === "Aprobado"
-                      ? "INGRESO AUTORIZADO"
+                      ? unicoRegistro.es_prematuro
+                        ? "ACREDITACIÓN APROBADA (VIGENCIA PRÓXIMA)"
+                        : unicoRegistro.es_vencido
+                        ? "ACREDITACIÓN VENCIDA"
+                        : "INGRESO AUTORIZADO"
                       : unicoRegistro.estado === "Rechazado"
                       ? "ACCESO DENEGADO"
                       : "ACCESO PENDIENTE DE VALIDACIÓN"}
@@ -654,13 +792,13 @@ function PorteriaDashboard({ perfil }: { perfil?: Perfil | null }) {
 
             {/* Vigencia de acceso para visitantes */}
             {unicoRegistro.categoria_registro === "visitante" && (
-              unicoRegistro.alerta_vigencia ? (
+              unicoRegistro.es_vencido ? (
                 <div className="p-3.5 rounded-2xl bg-rose-600 text-white flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-sm border border-rose-700">
                   <div className="flex items-center gap-2.5">
                     <AlertTriangle className="w-6 h-6 text-rose-100 shrink-0" />
                     <div>
                       <p className="font-black text-xs sm:text-sm uppercase tracking-wider">
-                        ⚠️ {unicoRegistro.alerta_vigencia}
+                        ⚠️ Acreditación Vencida
                       </p>
                       <div className="text-[11px] text-rose-100 mt-1 space-y-0.5 font-mono">
                         <p>Ingreso: <strong>{unicoRegistro.fecha_desde_formateada || unicoRegistro.fecha_desde}</strong></p>
@@ -669,7 +807,31 @@ function PorteriaDashboard({ perfil }: { perfil?: Perfil | null }) {
                     </div>
                   </div>
                   <span className="self-start sm:self-auto px-2.5 py-1 rounded-xl bg-white/20 text-[10px] font-black uppercase tracking-wider">
-                    Acceso No Autorizado
+                    Acceso Vencido
+                  </span>
+                </div>
+              ) : unicoRegistro.es_prematuro ? (
+                <div className="p-3.5 rounded-2xl bg-blue-50 dark:bg-blue-950/40 border border-blue-300 dark:border-blue-800 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
+                  <div className="flex items-center gap-2.5">
+                    <CalendarDays className="w-5 h-5 text-blue-600 dark:text-blue-400 shrink-0" />
+                    <div>
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-blue-800 dark:text-blue-300">
+                        Vigencia Próxima (Habilitada a partir de la fecha de inicio)
+                      </span>
+                      <div className="mt-0.5 space-y-0.5 text-xs font-mono">
+                        <p className="text-neutral-900 dark:text-white">
+                          <span className="text-neutral-500 font-sans font-medium text-[11px]">Inicio autorizado:</span>{" "}
+                          <span className="text-blue-700 dark:text-blue-300 font-bold">{unicoRegistro.fecha_desde_formateada || unicoRegistro.fecha_desde}</span>
+                        </p>
+                        <p className="text-neutral-900 dark:text-white">
+                          <span className="text-neutral-500 font-sans font-medium text-[11px]">Hasta:</span>{" "}
+                          <span className="text-blue-700 dark:text-blue-300 font-bold">{unicoRegistro.fecha_hasta_formateada || unicoRegistro.fecha_hasta}</span>
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  <span className="self-start sm:self-auto px-2.5 py-1 rounded-full bg-blue-600 text-white text-[10px] font-bold uppercase tracking-wider">
+                    Inicio Próximo
                   </span>
                 </div>
               ) : (
@@ -709,9 +871,16 @@ function PorteriaDashboard({ perfil }: { perfil?: Perfil | null }) {
                 <h4 className="text-lg font-black text-neutral-900 dark:text-white leading-snug">
                   {unicoRegistro.nombre}
                 </h4>
-                <p className="text-xs font-mono font-bold text-neutral-600 dark:text-neutral-300">
-                  {unicoRegistro.tipo_documento}: {unicoRegistro.numero_documento}
-                </p>
+                <div className="flex items-center gap-1.5 flex-wrap pt-0.5">
+                  <span className="text-xs font-mono font-bold text-neutral-600 dark:text-neutral-300">
+                    {unicoRegistro.tipo_documento}: {unicoRegistro.numero_documento}
+                  </span>
+                  {unicoRegistro.numero_escarapela && (
+                    <span className="text-xs font-mono font-bold px-2 py-0.5 rounded-md bg-amber-100 dark:bg-amber-950/70 text-amber-900 dark:text-amber-200 border border-amber-300 dark:border-amber-800">
+                      Escarapela #{unicoRegistro.numero_escarapela}
+                    </span>
+                  )}
+                </div>
               </div>
 
               {/* Columna 2: Escuela o Responsable */}
@@ -1088,9 +1257,19 @@ function PorteriaDashboard({ perfil }: { perfil?: Perfil | null }) {
                         </span>
 
                         {esAprobado ? (
-                          <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 font-bold text-[10px]">
-                            ✓ Aprobado
-                          </span>
+                          item.es_vencido ? (
+                            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-400 font-bold text-[10px]">
+                              Vencido
+                            </span>
+                          ) : item.es_prematuro ? (
+                            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-400 font-bold text-[10px]">
+                              Próximo
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 font-bold text-[10px]">
+                              ✓ Aprobado
+                            </span>
+                          )
                         ) : esRechazado ? (
                           <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-400 font-bold text-[10px]">
                             ✕ Denegado
@@ -1110,6 +1289,11 @@ function PorteriaDashboard({ perfil }: { perfil?: Perfil | null }) {
                         <span className="px-1.5 py-0.5 rounded-md bg-neutral-100/80 dark:bg-neutral-800/70 text-neutral-700 dark:text-neutral-300">
                           {item.tipo_documento}: {item.numero_documento}
                         </span>
+                        {item.numero_escarapela && (
+                          <span className="px-1.5 py-0.5 rounded-md bg-amber-50 dark:bg-amber-950/70 text-amber-800 dark:text-amber-300 border border-amber-200/80 dark:border-amber-800/60 font-semibold text-[10px]">
+                            Esc #{item.numero_escarapela}
+                          </span>
+                        )}
                         {item.tiene_vehiculo && item.placa && (
                           <span className="px-1.5 py-0.5 rounded-md bg-amber-300 dark:bg-amber-400 text-neutral-900 font-mono font-black text-[10px] tracking-wide shrink-0">
                             {item.placa}
@@ -1198,6 +1382,11 @@ function PorteriaDashboard({ perfil }: { perfil?: Perfil | null }) {
                             <span className="text-[11px] text-neutral-400 font-mono">
                               {item.tipo_documento}: {item.numero_documento}
                             </span>
+                            {item.numero_escarapela && (
+                              <span className="px-1.5 py-0.5 rounded bg-amber-50 dark:bg-amber-950/60 text-amber-900 dark:text-amber-200 border border-amber-300 dark:border-amber-800 font-mono font-bold text-[10px] tracking-wide shrink-0">
+                                Esc #{item.numero_escarapela}
+                              </span>
+                            )}
                             {item.tiene_vehiculo && item.placa && (
                               <span className="px-1.5 py-0.5 rounded bg-amber-300 dark:bg-amber-400 text-neutral-900 font-mono font-black text-[10px] tracking-wide shrink-0">
                                 {item.placa}
@@ -1236,11 +1425,22 @@ function PorteriaDashboard({ perfil }: { perfil?: Perfil | null }) {
                               <p className="font-semibold text-neutral-700 dark:text-neutral-300 text-[11px]">Vigencia Oficial</p>
                               <p className="text-[10px] text-neutral-400 font-mono">Temporada 2026</p>
                             </div>
-                          ) : item.alerta_vigencia ? (
+                          ) : item.es_vencido ? (
                             <div className="space-y-0.5">
                               <span className="inline-flex items-center gap-1 px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-rose-100 dark:bg-rose-950/60 text-rose-800 dark:text-rose-300 border border-rose-300 dark:border-rose-800">
                                 <AlertTriangle className="w-3 h-3 text-rose-600 shrink-0" />
                                 <span>Vencido</span>
+                              </span>
+                              <div className="text-[10px] text-neutral-500 font-mono leading-tight">
+                                <p><span className="text-neutral-400 font-sans">Ingreso:</span> {item.fecha_desde_formateada || item.fecha_desde}</p>
+                                <p><span className="text-neutral-400 font-sans">Salida:</span> {item.fecha_hasta_formateada || item.fecha_hasta}</p>
+                              </div>
+                            </div>
+                          ) : item.es_prematuro ? (
+                            <div className="space-y-0.5">
+                              <span className="inline-flex items-center gap-1 px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-blue-100 dark:bg-blue-950/60 text-blue-800 dark:text-blue-300 border border-blue-300 dark:border-blue-800">
+                                <CalendarDays className="w-3 h-3 text-blue-600 shrink-0" />
+                                <span>Próximo</span>
                               </span>
                               <div className="text-[10px] text-neutral-500 font-mono leading-tight">
                                 <p><span className="text-neutral-400 font-sans">Ingreso:</span> {item.fecha_desde_formateada || item.fecha_desde}</p>
@@ -1460,9 +1660,16 @@ function PorteriaDashboard({ perfil }: { perfil?: Perfil | null }) {
                     <h4 className="text-sm font-black text-neutral-900 dark:text-white leading-snug">
                       {registroSeleccionado.nombre}
                     </h4>
-                    <p className="text-[11px] font-mono font-bold text-neutral-600 dark:text-neutral-300 mt-0.5">
-                      {registroSeleccionado.tipo_documento}: {registroSeleccionado.numero_documento}
-                    </p>
+                    <div className="flex items-center gap-1.5 flex-wrap mt-0.5">
+                      <span className="text-[11px] font-mono font-bold text-neutral-600 dark:text-neutral-300">
+                        {registroSeleccionado.tipo_documento}: {registroSeleccionado.numero_documento}
+                      </span>
+                      {registroSeleccionado.numero_escarapela && (
+                        <span className="text-[10px] font-mono font-bold px-1.5 py-0.2 rounded bg-amber-100 dark:bg-amber-950/70 text-amber-900 dark:text-amber-200 border border-amber-300 dark:border-amber-800">
+                          Escarapela #{registroSeleccionado.numero_escarapela}
+                        </span>
+                      )}
+                    </div>
                   </div>
 
                   <div>
@@ -1626,9 +1833,11 @@ function PorteriaDashboard({ perfil }: { perfil?: Perfil | null }) {
                                 <div className="text-[10px] text-neutral-500 dark:text-neutral-400 font-mono flex flex-col gap-0.5">
                                   <div><span className="text-neutral-400 dark:text-neutral-500 font-sans">Ingreso:</span> {vis.fecha_desde_formateada || vis.fecha_desde}</div>
                                   <div><span className="text-neutral-400 dark:text-neutral-500 font-sans">Salida:</span> {vis.fecha_hasta_formateada || vis.fecha_hasta}</div>
-                                  {vis.alerta_vigencia && (
-                                    <span className="text-rose-600 dark:text-rose-400 font-bold">⚠️ {vis.alerta_vigencia}</span>
-                                  )}
+                                  {vis.es_vencido ? (
+                                    <span className="text-rose-600 dark:text-rose-400 font-bold">⚠️ Acreditación Vencida</span>
+                                  ) : vis.es_prematuro ? (
+                                    <span className="text-blue-600 dark:text-blue-400 font-bold">📅 Vigencia Próxima</span>
+                                  ) : null}
                                 </div>
 
                                 <div className="flex items-center gap-1.5">
@@ -1692,7 +1901,11 @@ function PorteriaDashboard({ perfil }: { perfil?: Perfil | null }) {
                 <div
                   className={`px-3.5 py-2.5 rounded-2xl flex items-center justify-between text-white ${
                     registroSeleccionado.estado === "Aprobado"
-                      ? "bg-emerald-600"
+                      ? registroSeleccionado.es_prematuro
+                        ? "bg-blue-700"
+                        : registroSeleccionado.es_vencido
+                        ? "bg-rose-700"
+                        : "bg-emerald-600"
                       : registroSeleccionado.estado === "Rechazado"
                       ? "bg-rose-600"
                       : "bg-amber-500"
@@ -1700,16 +1913,26 @@ function PorteriaDashboard({ perfil }: { perfil?: Perfil | null }) {
                 >
                   <div className="flex items-center gap-2 min-w-0">
                     {registroSeleccionado.estado === "Aprobado" ? (
-                      <CheckCircle2 className="w-5 h-5 shrink-0" />
+                      registroSeleccionado.es_prematuro ? (
+                        <CalendarDays className="w-5 h-5 shrink-0 text-blue-100" />
+                      ) : registroSeleccionado.es_vencido ? (
+                        <AlertTriangle className="w-5 h-5 shrink-0 text-rose-100" />
+                      ) : (
+                        <CheckCircle2 className="w-5 h-5 shrink-0 text-emerald-100" />
+                      )
                     ) : registroSeleccionado.estado === "Rechazado" ? (
-                      <XCircle className="w-5 h-5 shrink-0" />
+                      <XCircle className="w-5 h-5 shrink-0 text-rose-100" />
                     ) : (
-                      <AlertTriangle className="w-5 h-5 shrink-0" />
+                      <AlertTriangle className="w-5 h-5 shrink-0 text-amber-100" />
                     )}
                     <div className="truncate">
                       <p className="font-black text-xs sm:text-sm uppercase tracking-wide leading-tight">
                         {registroSeleccionado.estado === "Aprobado"
-                          ? "INGRESO AUTORIZADO"
+                          ? registroSeleccionado.es_prematuro
+                            ? "ACREDITACIÓN APROBADA (VIGENCIA PRÓXIMA)"
+                            : registroSeleccionado.es_vencido
+                            ? "ACREDITACIÓN VENCIDA"
+                            : "INGRESO AUTORIZADO"
                           : registroSeleccionado.estado === "Rechazado"
                           ? "ACCESO DENEGADO"
                           : "ACCESO PENDIENTE DE VALIDACIÓN"}
@@ -1725,18 +1948,39 @@ function PorteriaDashboard({ perfil }: { perfil?: Perfil | null }) {
                 </div>
 
                 {/* Vigencia en Modal */}
-                {registroSeleccionado.alerta_vigencia ? (
+                {registroSeleccionado.es_vencido ? (
                   <div className="p-3 rounded-2xl bg-rose-600 text-white flex items-center gap-2.5 text-xs shadow-xs">
                     <AlertTriangle className="w-5 h-5 text-rose-100 shrink-0" />
                     <div>
                       <p className="font-black uppercase tracking-wider">
-                        ⚠️ {registroSeleccionado.alerta_vigencia}
+                        ⚠️ Acreditación Vencida
                       </p>
                       <div className="text-[11px] text-rose-100 mt-1 flex flex-col gap-0.5 font-mono">
                         <div><span className="opacity-80">Ingreso:</span> {registroSeleccionado.fecha_desde_formateada || registroSeleccionado.fecha_desde}</div>
                         <div><span className="opacity-80">Salida:</span> {registroSeleccionado.fecha_hasta_formateada || registroSeleccionado.fecha_hasta}</div>
                       </div>
                     </div>
+                  </div>
+                ) : registroSeleccionado.es_prematuro ? (
+                  <div className="p-3 rounded-2xl bg-blue-50 dark:bg-blue-950/40 border border-blue-300 dark:border-blue-800 flex items-center justify-between text-xs">
+                    <div>
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-blue-800 dark:text-blue-300">
+                        Vigencia Próxima (Habilitada a partir de la fecha de inicio)
+                      </span>
+                      <div className="font-bold text-neutral-900 dark:text-white mt-1 flex flex-col gap-0.5 text-xs">
+                        <div>
+                          <span className="text-neutral-500 dark:text-neutral-400 font-normal">Inicio autorizado: </span>
+                          <span className="text-blue-700 dark:text-blue-300 font-mono">{registroSeleccionado.fecha_desde_formateada || registroSeleccionado.fecha_desde}</span>
+                        </div>
+                        <div>
+                          <span className="text-neutral-500 dark:text-neutral-400 font-normal">Hasta: </span>
+                          <span className="text-blue-700 dark:text-blue-300 font-mono">{registroSeleccionado.fecha_hasta_formateada || registroSeleccionado.fecha_hasta}</span>
+                        </div>
+                      </div>
+                    </div>
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-600 text-white self-start">
+                      Inicio Próximo
+                    </span>
                   </div>
                 ) : (
                   <div className="p-3 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-300 dark:border-emerald-800 flex items-center justify-between text-xs">
@@ -1768,9 +2012,16 @@ function PorteriaDashboard({ perfil }: { perfil?: Perfil | null }) {
                     <h4 className="text-sm font-black text-neutral-900 dark:text-white leading-snug">
                       {registroSeleccionado.nombre}
                     </h4>
-                    <p className="text-[11px] font-mono text-neutral-600 dark:text-neutral-300 mt-0.5">
-                      {registroSeleccionado.tipo_documento}: {registroSeleccionado.numero_documento}
-                    </p>
+                    <div className="flex items-center gap-1.5 flex-wrap mt-0.5">
+                      <span className="text-[11px] font-mono text-neutral-600 dark:text-neutral-300">
+                        {registroSeleccionado.tipo_documento}: {registroSeleccionado.numero_documento}
+                      </span>
+                      {registroSeleccionado.numero_escarapela && (
+                        <span className="text-[10px] font-mono font-bold px-1.5 py-0.2 rounded bg-amber-100 dark:bg-amber-950/70 text-amber-900 dark:text-amber-200 border border-amber-300 dark:border-amber-800">
+                          Escarapela #{registroSeleccionado.numero_escarapela}
+                        </span>
+                      )}
+                    </div>
                     <span className="inline-block mt-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-blue-50 dark:bg-blue-950/60 text-[#0A2540] dark:text-blue-300">
                       Parentesco: {registroSeleccionado.parentesco}
                     </span>
