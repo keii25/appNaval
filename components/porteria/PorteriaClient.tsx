@@ -38,6 +38,7 @@ import {
   HistorialAccesoTimeline,
   EventoHistorialAcceso,
 } from "@/components/porteria/HistorialAccesoTimeline";
+import AsignadorEscarapelaBadge from "@/components/porteria/AsignadorEscarapelaBadge";
 
 export interface EventoAccesoResumen {
   id: string;
@@ -348,6 +349,42 @@ function PorteriaDashboard({ perfil }: { perfil?: Perfil | null }) {
       setProcesandoAccesoId(null);
     }
   };
+
+  const handleEscarapelaActualizada = useCallback(
+    (id: string, tipoSujeto: "deportista" | "visitante", nuevoNumero: string | null) => {
+      // 1. Actualizar en todosLosRegistros
+      setTodosLosRegistros((prev) =>
+        prev.map((item) => {
+          if (item.id === id) {
+            return { ...item, numero_escarapela: nuevoNumero };
+          }
+          if (item.categoria_registro === "deportista" && item.visitantes_asociados) {
+            const asociadosActualizados = item.visitantes_asociados.map((v) =>
+              v.id === id ? { ...v, numero_escarapela: nuevoNumero } : v
+            );
+            return { ...item, visitantes_asociados: asociadosActualizados };
+          }
+          return item;
+        })
+      );
+
+      // 2. Actualizar en registroSeleccionado si está abierto en el Modal
+      setRegistroSeleccionado((prev) => {
+        if (!prev) return null;
+        if (prev.id === id) {
+          return { ...prev, numero_escarapela: nuevoNumero };
+        }
+        if (prev.categoria_registro === "deportista" && prev.visitantes_asociados) {
+          const asociadosActualizados = prev.visitantes_asociados.map((v) =>
+            v.id === id ? { ...v, numero_escarapela: nuevoNumero } : v
+          );
+          return { ...prev, visitantes_asociados: asociadosActualizados };
+        }
+        return prev;
+      });
+    },
+    []
+  );
 
   const limpiarBusqueda = () => {
     setBusqueda("");
@@ -875,11 +912,13 @@ function PorteriaDashboard({ perfil }: { perfil?: Perfil | null }) {
                   <span className="text-xs font-mono font-bold text-neutral-600 dark:text-neutral-300">
                     {unicoRegistro.tipo_documento}: {unicoRegistro.numero_documento}
                   </span>
-                  {unicoRegistro.numero_escarapela && (
-                    <span className="text-xs font-mono font-bold px-2 py-0.5 rounded-md bg-amber-100 dark:bg-amber-950/70 text-amber-900 dark:text-amber-200 border border-amber-300 dark:border-amber-800">
-                      Escarapela #{unicoRegistro.numero_escarapela}
-                    </span>
-                  )}
+                  <AsignadorEscarapelaBadge
+                    id={unicoRegistro.id}
+                    tipoSujeto={unicoRegistro.categoria_registro === "deportista" ? "deportista" : "visitante"}
+                    numeroEscarapela={unicoRegistro.numero_escarapela}
+                    nombreSujeto={unicoRegistro.nombre}
+                    onActualizado={handleEscarapelaActualizada}
+                  />
                 </div>
               </div>
 
@@ -1289,11 +1328,14 @@ function PorteriaDashboard({ perfil }: { perfil?: Perfil | null }) {
                         <span className="px-1.5 py-0.5 rounded-md bg-neutral-100/80 dark:bg-neutral-800/70 text-neutral-700 dark:text-neutral-300">
                           {item.tipo_documento}: {item.numero_documento}
                         </span>
-                        {item.numero_escarapela && (
-                          <span className="px-1.5 py-0.5 rounded-md bg-amber-50 dark:bg-amber-950/70 text-amber-800 dark:text-amber-300 border border-amber-200/80 dark:border-amber-800/60 font-semibold text-[10px]">
-                            Esc #{item.numero_escarapela}
-                          </span>
-                        )}
+                        <AsignadorEscarapelaBadge
+                          id={item.id}
+                          tipoSujeto={item.categoria_registro === "deportista" ? "deportista" : "visitante"}
+                          numeroEscarapela={item.numero_escarapela}
+                          nombreSujeto={item.nombre}
+                          size="sm"
+                          onActualizado={handleEscarapelaActualizada}
+                        />
                         {item.tiene_vehiculo && item.placa && (
                           <span className="px-1.5 py-0.5 rounded-md bg-amber-300 dark:bg-amber-400 text-neutral-900 font-mono font-black text-[10px] tracking-wide shrink-0">
                             {item.placa}
@@ -1382,11 +1424,14 @@ function PorteriaDashboard({ perfil }: { perfil?: Perfil | null }) {
                             <span className="text-[11px] text-neutral-400 font-mono">
                               {item.tipo_documento}: {item.numero_documento}
                             </span>
-                            {item.numero_escarapela && (
-                              <span className="px-1.5 py-0.5 rounded bg-amber-50 dark:bg-amber-950/60 text-amber-900 dark:text-amber-200 border border-amber-300 dark:border-amber-800 font-mono font-bold text-[10px] tracking-wide shrink-0">
-                                Esc #{item.numero_escarapela}
-                              </span>
-                            )}
+                            <AsignadorEscarapelaBadge
+                              id={item.id}
+                              tipoSujeto={item.categoria_registro === "deportista" ? "deportista" : "visitante"}
+                              numeroEscarapela={item.numero_escarapela}
+                              nombreSujeto={item.nombre}
+                              size="sm"
+                              onActualizado={handleEscarapelaActualizada}
+                            />
                             {item.tiene_vehiculo && item.placa && (
                               <span className="px-1.5 py-0.5 rounded bg-amber-300 dark:bg-amber-400 text-neutral-900 font-mono font-black text-[10px] tracking-wide shrink-0">
                                 {item.placa}
@@ -1664,11 +1709,13 @@ function PorteriaDashboard({ perfil }: { perfil?: Perfil | null }) {
                       <span className="text-[11px] font-mono font-bold text-neutral-600 dark:text-neutral-300">
                         {registroSeleccionado.tipo_documento}: {registroSeleccionado.numero_documento}
                       </span>
-                      {registroSeleccionado.numero_escarapela && (
-                        <span className="text-[10px] font-mono font-bold px-1.5 py-0.2 rounded bg-amber-100 dark:bg-amber-950/70 text-amber-900 dark:text-amber-200 border border-amber-300 dark:border-amber-800">
-                          Escarapela #{registroSeleccionado.numero_escarapela}
-                        </span>
-                      )}
+                      <AsignadorEscarapelaBadge
+                        id={registroSeleccionado.id}
+                        tipoSujeto="deportista"
+                        numeroEscarapela={registroSeleccionado.numero_escarapela}
+                        nombreSujeto={registroSeleccionado.nombre}
+                        onActualizado={handleEscarapelaActualizada}
+                      />
                     </div>
                   </div>
 
@@ -1802,6 +1849,14 @@ function PorteriaDashboard({ perfil }: { perfil?: Perfil | null }) {
                               <span className="text-[11px] text-neutral-400 font-mono shrink-0">
                                 {vis.tipo_documento} {vis.numero_documento}
                               </span>
+                              <AsignadorEscarapelaBadge
+                                id={vis.id}
+                                tipoSujeto="visitante"
+                                numeroEscarapela={vis.numero_escarapela}
+                                nombreSujeto={vis.nombre}
+                                size="sm"
+                                onActualizado={handleEscarapelaActualizada}
+                              />
                               {vis.tiene_vehiculo && vis.placa && (
                                 <span className="px-1.5 py-0.5 rounded bg-amber-300 dark:bg-amber-400 text-neutral-900 font-mono font-black text-[10px] tracking-wide shrink-0">
                                   {vis.placa}
@@ -2016,11 +2071,13 @@ function PorteriaDashboard({ perfil }: { perfil?: Perfil | null }) {
                       <span className="text-[11px] font-mono text-neutral-600 dark:text-neutral-300">
                         {registroSeleccionado.tipo_documento}: {registroSeleccionado.numero_documento}
                       </span>
-                      {registroSeleccionado.numero_escarapela && (
-                        <span className="text-[10px] font-mono font-bold px-1.5 py-0.2 rounded bg-amber-100 dark:bg-amber-950/70 text-amber-900 dark:text-amber-200 border border-amber-300 dark:border-amber-800">
-                          Escarapela #{registroSeleccionado.numero_escarapela}
-                        </span>
-                      )}
+                      <AsignadorEscarapelaBadge
+                        id={registroSeleccionado.id}
+                        tipoSujeto="visitante"
+                        numeroEscarapela={registroSeleccionado.numero_escarapela}
+                        nombreSujeto={registroSeleccionado.nombre}
+                        onActualizado={handleEscarapelaActualizada}
+                      />
                     </div>
                     <span className="inline-block mt-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-blue-50 dark:bg-blue-950/60 text-[#0A2540] dark:text-blue-300">
                       Parentesco: {registroSeleccionado.parentesco}
